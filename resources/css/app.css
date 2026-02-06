@@ -1,3 +1,173 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Custom styles for full-screen mobile sidebar */
+@media (max-width: 1024px) {
+    #sidebar {
+        width: 100vw !important;
+        height: 100vh;
+        top: 0;
+        left: 0;
+        right: 0;
+        transform: translateY(-100%);
+    }
+    
+    #sidebar.translate-y-0 {
+        transform: translateY(0);
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    }
+    
+    /* Ensure main content doesn't shift when sidebar opens */
+    #app > div:last-child {
+        transition: none;
+    }
+}
+
+/* For all mobile devices */
+@media (max-width: 1024px) {
+    #sidebar,
+    #sidebarOverlay {
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+}
+
+/* Prevent horizontal scroll on mobile */
+body {
+    overflow-x: hidden;
+}
+
+/* Better touch targets for mobile */
+@media (max-width: 1024px) {
+    #sidebar a {
+        padding: 1.25rem;
+        font-size: 1.125rem;
+    }
+    
+    #sidebar .w-5 {
+        width: 1.75rem;
+        height: 1.75rem;
+    }
+    
+    #sidebar .w-6 {
+        width: 2rem;
+        height: 2rem;
+    }
+}
+
+/* Ensure proper mobile viewport */
+@viewport {
+    width: device-width;
+    zoom: 1.0;
+}
+
+/* Responsive improvements for all screen sizes */
+@media (max-width: 640px) {
+    #sidebar a {
+        padding: 1.5rem;
+        font-size: 1.25rem;
+    }
+    
+    #sidebar .w-5 {
+        width: 2rem;
+        height: 2rem;
+    }
+    
+    #sidebar .w-6 {
+        width: 2.25rem;
+        height: 2.25rem;
+    }
+    
+    #sidebar h1 {
+        font-size: 1.75rem;
+    }
+    
+    #sidebar p {
+        font-size: 1rem;
+    }
+}
+
+/* Tablet responsiveness */
+@media (min-width: 768px) and (max-width: 1024px) {
+    #sidebar {
+        width: 80vw !important;
+        max-width: 600px;
+        left: 50%;
+        transform: translate(-50%, -100%);
+    }
+    
+    #sidebar.translate-y-0 {
+        transform: translate(-50%, 0);
+    }
+}
+
+/* Desktop improvements */
+@media (min-width: 1025px) {
+    #app {
+        min-height: 100vh;
+    }
+    
+    main {
+        min-height: calc(100vh - 64px);
+    }
+}
+
+/* Custom X button styles */
+#closeSidebar {
+    position: absolute !important;
+    top: 1rem !important;
+    right: 1rem !important;
+    color: white !important;
+    font-size: 1.5rem !important;
+    cursor: pointer !important;
+    z-index: 60 !important;
+    padding: 0.5rem !important;
+    border-radius: 0.5rem !important;
+    background: rgba(239, 68, 68, 0.2) !important;
+    transition: all 0.2s ease !important;
+    display: none !important;
+    border: none !important;
+    font-family: system-ui, -apple-system, sans-serif !important;
+    line-height: 1 !important;
+}
+
+#closeSidebar:hover {
+    background: rgba(239, 68, 68, 0.3) !important;
+    transform: scale(1.05) !important;
+}
+
+#closeSidebar:active {
+    transform: scale(0.95) !important;
+}
+
+/* Show X button only on mobile */
+@media (max-width: 1024px) {
+    #closeSidebar {
+        display: block !important;
+    }
+}
+
+/* Mobile card view improvements */
+@media (max-width: 1023px) {
+    .tools-card {
+        background: linear-gradient(to bottom right, rgb(31 41 55), rgb(17 24 39));
+        border: 1px solid rgb(55 65 81);
+        border-radius: 0.75rem;
+        padding: 1rem;
+        margin-bottom: 0.5rem;
+        transition: all 0.2s ease;
+    }
+    
+    .tools-card:hover {
+        background: linear-gradient(to bottom right, rgb(31 41 55 / 0.9), rgb(17 24 39 / 0.9));
+        transform: translateY(-1px);
+    }
+    
+    .tools-card button {
+        transition: all 0.2s ease;
+    }
+    
+    .tools-card button:hover {
+        transform: translateY(-1px);
+    }
+}
