@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     
-    <title>404 - Halaman Tidak Ditemukan | SIPINJAM</title>
+    <title>403 - Akses Ditolak | SIPINJAM</title>
 
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.bunny.net">
@@ -18,7 +18,7 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     
     <style>
-        /* Custom 404 page styles */
+        /* Custom 403 page styles */
         .error-bg {
             background: linear-gradient(135deg, #1f2937 0%, #111827 100%);
             min-height: 100vh;
@@ -52,7 +52,7 @@
         .tool {
             position: absolute;
             opacity: 0.1;
-            animation: float 15s infinite ease-in-out;
+            animation: shake 10s infinite ease-in-out;
             color: #dc2626;
             font-size: 2rem;
         }
@@ -66,32 +66,34 @@
         .tool2 {
             top: 25%;
             right: 15%;
-            animation-delay: 3s;
+            animation-delay: 2.5s;
         }
         
         .tool3 {
             bottom: 20%;
             left: 20%;
-            animation-delay: 6s;
+            animation-delay: 5s;
         }
         
         .tool4 {
             top: 60%;
             right: 25%;
-            animation-delay: 9s;
+            animation-delay: 7.5s;
         }
         
-        .tool5 {
-            bottom: 30%;
-            right: 10%;
-            animation-delay: 12s;
+        .lock-icon {
+            animation: pulse 2s infinite;
         }
         
-        @keyframes float {
-            0%, 100% { transform: translateY(0px) rotate(0deg); }
-            25% { transform: translateY(-15px) rotate(5deg); }
-            50% { transform: translateY(10px) rotate(-5deg); }
-            75% { transform: translateY(-10px) rotate(3deg); }
+        @keyframes shake {
+            0%, 100% { transform: translateX(0) rotate(0deg); }
+            10%, 30%, 50%, 70%, 90% { transform: translateX(-5px) rotate(-2deg); }
+            20%, 40%, 60%, 80% { transform: translateX(5px) rotate(2deg); }
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.05); opacity: 0.8; }
         }
         
         .error-container {
@@ -152,17 +154,6 @@
             background: rgba(239, 68, 68, 0.1);
         }
         
-        .search-input {
-            background: rgba(31, 41, 55, 0.5);
-            border: 1px solid #374151;
-            transition: all 0.3s ease;
-        }
-        
-        .search-input:focus {
-            border-color: #dc2626;
-            box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
-        }
-        
         @media (max-width: 768px) {
             .error-card {
                 margin: 1rem;
@@ -179,19 +170,16 @@
     <!-- Floating Background Tools -->
     <div class="floating-tools">
         <div class="tool tool1">
-            <i class="fas fa-tools"></i>
+            <i class="fas fa-lock"></i>
         </div>
         <div class="tool tool2">
-            <i class="fas fa-wrench"></i>
+            <i class="fas fa-shield-alt"></i>
         </div>
         <div class="tool tool3">
-            <i class="fas fa-plug"></i>
+            <i class="fas fa-user-slash"></i>
         </div>
         <div class="tool tool4">
-            <i class="fas fa-hammer"></i>
-        </div>
-        <div class="tool tool5">
-            <i class="fas fa-weight"></i>
+            <i class="fas fa-ban"></i>
         </div>
     </div>
 
@@ -200,57 +188,63 @@
         <div class="w-full max-w-2xl">
             <!-- Error Card -->
             <div class="error-card rounded-2xl p-8 md:p-12 text-center">
-                <!-- Error Code -->
+                <!-- Error Icon & Code -->
                 <div class="mb-8">
-                    <h1 class="error-code text-9xl md:text-[12rem] font-black mb-4">404</h1>
+                    <div class="inline-flex items-center justify-center w-24 h-24 bg-gradient-to-br from-red-600 to-red-800 rounded-full mb-4 lock-icon">
+                        <i class="fas fa-lock text-white text-4xl"></i>
+                    </div>
+                    <h1 class="error-code text-6xl md:text-8xl font-black mb-4">403</h1>
                     <div class="w-24 h-1 bg-gradient-to-r from-transparent via-red-500 to-transparent mx-auto"></div>
                 </div>
 
                 <!-- Error Message -->
                 <div class="mb-8">
                     <h2 class="text-2xl md:text-3xl font-bold text-white mb-4">
-                        Halaman Tidak Ditemukan
+                        Akses Ditolak
                     </h2>
                     <p class="text-gray-400 text-base md:text-lg mb-2">
-                        Sepertinya alat atau halaman yang kamu cari
-                        <span class="font-semibold text-red-400">tidak tersedia</span>
-                        atau sudah dipindahkan.
+                        Kamu <span class="font-semibold text-red-400">tidak memiliki izin</span>
+                        untuk mengakses halaman ini.
                     </p>
                     <p class="text-gray-500 text-sm md:text-base">
-                        Mungkin halaman telah dihapus, diganti namanya, atau sedang dalam perbaikan.
+                        Halaman ini memerlukan otorisasi khusus. Silakan login dengan akun yang memiliki akses yang tepat.
                     </p>
-                </div>
-
-                <!-- Search Bar -->
-                <div class="mb-8 max-w-md mx-auto">
-                    <div class="relative">
-                        <input 
-                            type="text" 
-                            placeholder="Cari alat atau halaman..." 
-                            class="search-input w-full px-4 py-3 pl-12 rounded-lg text-white placeholder-gray-500 focus:outline-none"
-                        >
-                        <i class="fas fa-search absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-500"></i>
-                    </div>
                 </div>
 
                 <!-- Action Buttons -->
-                <div class="flex flex-col sm:flex-row gap-4 justify-center items-center">
-                    <a href="{{ url('/dashboard') }}" class="btn-home px-8 py-3 rounded-lg text-white font-semibold shadow-lg flex items-center justify-center">
+                <div class="flex flex-col sm:flex-row gap-4 justify-center items-center mb-8">
+                    <a href="{{ url('/login') }}" class="btn-home px-8 py-3 rounded-lg text-white font-semibold shadow-lg flex items-center justify-center">
                         <span class="relative z-10 flex items-center">
-                            <i class="fas fa-home mr-2"></i>
-                            Kembali ke Dashboard
+                            <i class="fas fa-sign-in-alt mr-2"></i>
+                            Login dengan Akun Lain
                         </span>
                     </a>
                     
-                    <button onclick="history.back()" class="btn-secondary px-8 py-3 rounded-lg text-gray-300 font-semibold flex items-center justify-center">
-                        <i class="fas fa-arrow-left mr-2"></i>
-                        Kembali ke Halaman Sebelumnya
-                    </button>
+                    <a href="{{ url('/dashboard') }}" class="btn-secondary px-8 py-3 rounded-lg text-gray-300 font-semibold flex items-center justify-center">
+                        <i class="fas fa-home mr-2"></i>
+                        Kembali ke Dashboard
+                    </a>
+                </div>
+
+                <!-- Permission Info -->
+                <div class="bg-red-900/20 border border-red-800/50 rounded-lg p-4 mb-8 text-left">
+                    <div class="flex items-start">
+                        <i class="fas fa-info-circle text-red-400 mr-3 mt-1"></i>
+                        <div>
+                            <h3 class="text-sm font-semibold text-white mb-2">Informasi Akses</h3>
+                            <ul class="space-y-1 text-xs text-gray-300">
+                                <li>• Pastikan kamu login dengan akun yang benar</li>
+                                <li>• Hubungi admin jika kamu merasa memiliki akses</li>
+                                <li>• Periksa kembali izin akun kamu</li>
+                                <li>• Jangan mencoba mengakses halaman tanpa izin</li>
+                            </ul>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Helpful Links -->
-                <div class="mt-12 pt-8 border-t border-gray-700">
-                    <p class="text-gray-500 text-sm mb-4">Mungkin kamu mencari:</p>
+                <div class="mt-8 pt-8 border-t border-gray-700">
+                    <p class="text-gray-500 text-sm mb-4">Berguna mungkin:</p>
                     <div class="flex flex-wrap justify-center gap-3">
                         <a href="{{ url('/dashboard') }}" class="inline-flex items-center px-4 py-2 bg-gray-800 hover:bg-gray-700 rounded-lg text-gray-300 hover:text-white text-sm transition-all duration-200">
                             <i class="fas fa-tachometer-alt mr-2"></i>
@@ -260,9 +254,9 @@
                             <i class="fas fa-wrench mr-2"></i>
                             Data Alat
                         </a>
-                        <a href="{{ url('/tools/create') }}" class="inline-flex items-center px-4 py-2 bg-gray-800 hover:bg-gray-700 rounded-lg text-gray-300 hover:text-white text-sm transition-all duration-200">
-                            <i class="fas fa-plus mr-2"></i>
-                            Pinjam Alat
+                        <a href="{{ url('/profile') }}" class="inline-flex items-center px-4 py-2 bg-gray-800 hover:bg-gray-700 rounded-lg text-gray-300 hover:text-white text-sm transition-all duration-200">
+                            <i class="fas fa-user mr-2"></i>
+                            Profil Saya
                         </a>
                     </div>
                 </div>
@@ -271,9 +265,9 @@
             <!-- Footer -->
             <div class="text-center mt-8">
                 <p class="text-gray-600 text-sm">
-                    Masih mengalami masalah? 
-                    <a href="#" class="text-red-400 hover:text-red-300 font-semibold transition-colors duration-200">
-                        Hubungi Admin
+                    Butuh bantuan? 
+                    <a href="mailto:admin@sipinjam.com" class="text-red-400 hover:text-red-300 font-semibold transition-colors duration-200">
+                        Hubungi Administrator
                     </a>
                 </p>
                 <div class="flex items-center justify-center space-x-6 mt-4">
@@ -286,8 +280,8 @@
                         Bantuan
                     </a>
                     <a href="#" class="text-gray-600 hover:text-red-400 text-xs transition-colors duration-200">
-                        <i class="fas fa-envelope mr-1"></i>
-                        Kontak
+                        <i class="fas fa-shield-alt mr-1"></i>
+                        Kebijakan Keamanan
                     </a>
                 </div>
             </div>
@@ -297,14 +291,14 @@
     <!-- Scripts -->
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // Add floating animation to tools on mouse move
+            // Add shake animation to tools on mouse move
             document.addEventListener('mousemove', (e) => {
                 const tools = document.querySelectorAll('.tool');
                 const x = e.clientX / window.innerWidth;
                 const y = e.clientY / window.innerHeight;
                 
                 tools.forEach((tool, index) => {
-                    const speed = (index + 1) * 8;
+                    const speed = (index + 1) * 6;
                     const xOffset = (x - 0.5) * speed;
                     const yOffset = (y - 0.5) * speed;
                     
@@ -312,31 +306,27 @@
                 });
             });
 
-            // Search functionality
-            const searchInput = document.querySelector('.search-input');
-            if (searchInput) {
-                searchInput.addEventListener('keypress', function(e) {
-                    if (e.key === 'Enter') {
-                        const query = this.value.trim();
-                        if (query) {
-                            // Redirect to tools page with search parameter
-                            window.location.href = `/tools?search=${encodeURIComponent(query)}`;
-                        }
-                    }
+            // Add click feedback to permission info
+            const permissionInfo = document.querySelector('.bg-red-900\\/20');
+            if (permissionInfo) {
+                permissionInfo.addEventListener('click', function() {
+                    this.style.animation = 'pulse 0.5s ease';
+                    setTimeout(() => {
+                        this.style.animation = '';
+                    }, 500);
                 });
             }
 
-            // Add some interactivity to helpful links
-            const helpfulLinks = document.querySelectorAll('.flex.flex-wrap.justify-center.gap-3 a');
-            helpfulLinks.forEach(link => {
-                link.addEventListener('mouseenter', function() {
-                    this.style.transform = 'translateY(-2px)';
-                });
-                
-                link.addEventListener('mouseleave', function() {
-                    this.style.transform = 'translateY(0)';
-                });
-            });
+            // Track access attempts for security
+            const accessAttempt = {
+                url: window.location.href,
+                timestamp: new Date().toISOString(),
+                userAgent: navigator.userAgent,
+                referrer: document.referrer
+            };
+
+            // Store in localStorage for debugging (in production, send to server)
+            localStorage.setItem('lastAccessAttempt', JSON.stringify(accessAttempt));
         });
     </script>
 </body>

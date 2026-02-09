@@ -9,7 +9,6 @@
         <ol class="inline-flex items-center space-x-1 md:space-x-3">
             <li class="inline-flex items-center">
                 <a href="/dashboard" class="text-gray-400 hover:text-red-300 transition-colors">
-                    <i class="fas fa-home mr-2"></i>
                     Dashboard
                 </a>
             </li>
