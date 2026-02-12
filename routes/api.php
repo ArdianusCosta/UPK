@@ -14,11 +14,11 @@ Route::prefix('master-data')->group(function() {
     Route::post('/kategori-alat', [KategoriAlatController::class, 'store']);
     Route::patch('/kategori-alat/{id}', [KategoriAlatController::class, 'update']);
     Route::delete('/kategori-alat/{id}', [KategoriAlatController::class, 'delete']);
-    Route::get('/kategori-alat/{id}/alats', [KategoriAlatController::class, 'alatsByKategori']);
 });
 
 Route::prefix('alats')->group(function() {
     Route::get('/', [AlatController::class, 'index']);
+    Route::get('/{id}', [AlatController::class, 'show']);
     Route::post('/', [AlatController::class, 'store']);
     Route::patch('/{id}', [AlatController::class, 'update']);
     Route::delete('/{id}', [AlatController::class, 'delete']);

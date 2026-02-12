@@ -1,0 +1,341 @@
+{
+    "openapi": "3.0.0",
+    "info": {
+        "title": "API Tugas UKK Peminjaman Alat",
+        "description": "Dokumentasi API Sistem Peminjaman Alat",
+        "version": "1.0.0"
+    },
+    "servers": [
+        {
+            "url": "http://127.0.0.1:8000",
+            "description": "Local Development Server"
+        }
+    ],
+    "paths": {
+        "/api/alats": {
+            "get": {
+                "tags": [
+                    "Alat"
+                ],
+                "summary": "Ambil semua alat",
+                "operationId": "f470cd39e062976fd8cc4640a5ffec03",
+                "responses": {
+                    "200": {
+                        "description": "Berhasil mengambil data"
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Alat"
+                ],
+                "summary": "Tambah alat",
+                "operationId": "cee032e444fa7cbb4008d2913a4c9c6f",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "kode",
+                                    "nama"
+                                ],
+                                "properties": {
+                                    "kode": {
+                                        "type": "string",
+                                        "example": "A001"
+                                    },
+                                    "nama": {
+                                        "type": "string",
+                                        "example": "Laptop Asus"
+                                    },
+                                    "kategori_alat_id": {
+                                        "type": "integer",
+                                        "example": 1
+                                    },
+                                    "kondisi": {
+                                        "type": "string",
+                                        "example": "baik"
+                                    },
+                                    "deskripsi": {
+                                        "type": "string",
+                                        "example": "Laptop untuk keperluan desain"
+                                    },
+                                    "lokasi": {
+                                        "type": "string",
+                                        "example": "Lab Komputer"
+                                    },
+                                    "foto": {
+                                        "type": "string",
+                                        "format": "binary",
+                                        "example": "foto_alat.jpg"
+                                    },
+                                    "stok": {
+                                        "type": "integer",
+                                        "example": 10
+                                    },
+                                    "status": {
+                                        "type": "string",
+                                        "example": "tersedia"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Berhasil menambahkan alat"
+                    }
+                }
+            }
+        },
+        "/api/alats/{id}": {
+            "get": {
+                "tags": [
+                    "Alat"
+                ],
+                "summary": "Ambil detail alat",
+                "operationId": "bcfc23533cdefb0a466b66900ebb385b",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Berhasil mengambil detail"
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "Alat"
+                ],
+                "summary": "Hapus alat",
+                "operationId": "0e5369eb7e4db53e021c99634b6217f3",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Berhasil hapus"
+                    }
+                }
+            },
+            "patch": {
+                "tags": [
+                    "Alat"
+                ],
+                "summary": "Update alat",
+                "operationId": "bc19c4d905a23bb2d1ce87bcaac115fc",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "kode": {
+                                        "type": "string",
+                                        "example": "A001"
+                                    },
+                                    "nama": {
+                                        "type": "string",
+                                        "example": "Laptop Asus"
+                                    },
+                                    "kategori_alat_id": {
+                                        "type": "integer",
+                                        "example": 1
+                                    },
+                                    "kondisi": {
+                                        "type": "string",
+                                        "example": "baik"
+                                    },
+                                    "deskripsi": {
+                                        "type": "string",
+                                        "example": "Laptop untuk keperluan desain"
+                                    },
+                                    "lokasi": {
+                                        "type": "string",
+                                        "example": "Lab Komputer"
+                                    },
+                                    "foto": {
+                                        "type": "string",
+                                        "format": "binary",
+                                        "example": "foto_alat.jpg"
+                                    },
+                                    "stok": {
+                                        "type": "integer",
+                                        "example": 10
+                                    },
+                                    "status": {
+                                        "type": "string",
+                                        "example": "tersedia"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Berhasil update"
+                    }
+                }
+            }
+        },
+        "/api/master-data/kategori-alat": {
+            "get": {
+                "tags": [
+                    "Master Data - Kategori Alat"
+                ],
+                "summary": "Ambil semua kategori alat",
+                "operationId": "dcd2adf08c9f08cae6dc2e9db6ae2d42",
+                "responses": {
+                    "200": {
+                        "description": "Berhasil mengambil data"
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Master Data - Kategori Alat"
+                ],
+                "summary": "Tambah kategori alat",
+                "operationId": "31207c07d57b6e359ed06675140a316e",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "nama_kategori_alat"
+                                ],
+                                "properties": {
+                                    "nama_kategori_alat": {
+                                        "type": "string",
+                                        "example": "Elektronik"
+                                    },
+                                    "status": {
+                                        "type": "string",
+                                        "example": "active"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Berhasil menambahkan kategori"
+                    }
+                }
+            }
+        },
+        "/api/master-data/kategori-alat/{id}": {
+            "delete": {
+                "tags": [
+                    "Master Data - Kategori Alat"
+                ],
+                "summary": "Hapus kategori alat",
+                "operationId": "f295b74af1e664706f2a363c1fa04696",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Berhasil hapus kategori"
+                    }
+                }
+            },
+            "patch": {
+                "tags": [
+                    "Master Data - Kategori Alat"
+                ],
+                "summary": "Update kategori alat",
+                "operationId": "d7c666b4739167b19dbe1a9ac8ba257e",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID kategori",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "nama_kategori_alat"
+                                ],
+                                "properties": {
+                                    "nama_kategori_alat": {
+                                        "type": "string",
+                                        "example": "Elektronik Update"
+                                    },
+                                    "status": {
+                                        "type": "string",
+                                        "example": "inactive"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Berhasil update kategori"
+                    }
+                }
+            }
+        }
+    },
+    "tags": [
+        {
+            "name": "Alat",
+            "description": "API untuk mengelola data alat"
+        },
+        {
+            "name": "Master Data - Kategori Alat",
+            "description": "API untuk mengelola kategori alat"
+        }
+    ]
+}
