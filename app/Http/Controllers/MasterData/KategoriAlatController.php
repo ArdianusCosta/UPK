@@ -33,6 +33,33 @@ class KategoriAlatController extends Controller
         ], 200);
     }
 
+    #[OA\Get(
+        path: "/api/master-data/kategori-alat/active",
+        summary: "Ambil kategori alat dengan status active",
+        tags: ["Master Data - Kategori Alat"]
+    )]
+    #[OA\Response(
+        response: 200,
+        description: "Berhasil mengambil data kategori active"
+    )]
+    public function getActiveKategori()
+    {
+        try {
+            $kategoriAlats = MDKategoriAlat::where('status', 'active')->get();
+
+            return response()->json([
+                'status' => 'success',
+                'data' => $kategoriAlats,
+            ], 200);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Gagal mengambil data kategori active',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
     #[OA\Post(
         path: "/api/master-data/kategori-alat",
         summary: "Tambah kategori alat",

@@ -15,7 +15,8 @@ class AlatController extends Controller
     #[OA\Get(
         path: "/api/alats",
         summary: "Ambil semua alat",
-        tags: ["Alat"]
+        tags: ["Alat"],
+        security: [["bearerAuth" => []]]
     )]
     #[OA\Response(response: 200, description: "Berhasil mengambil data")]
     public function index()
@@ -25,13 +26,13 @@ class AlatController extends Controller
 
             return response()->json([
                 'status' => 'success',
+                'message' => 'Berhasil mengambil data alat',
                 'data' => $alats,
-            ]);
+            ], 200);
         } catch (\Throwable $e) {
             return response()->json([
                 'status' => 'error',
                 'message' => 'Gagal mengambil data alat',
-                'error' => $e->getMessage()
             ], 500);
         }
     }
@@ -39,7 +40,8 @@ class AlatController extends Controller
     #[OA\Get(
         path: "/api/alats/{id}",
         summary: "Ambil detail alat",
-        tags: ["Alat"]
+        tags: ["Alat"],
+        security: [["bearerAuth" => []]]
     )]
     #[OA\Parameter(
         name: "id",
@@ -70,27 +72,31 @@ class AlatController extends Controller
             ], 500);
         }
     }
-    
+
     #[OA\Post(
         path: "/api/alats",
         summary: "Tambah alat",
-        tags: ["Alat"]
+        tags: ["Alat"],
+        security: [["bearerAuth" => []]]
     )]
     #[OA\RequestBody(
         required: true,
-        content: new OA\JsonContent(
-            required: ["kode","nama"],
-            properties: [
-                new OA\Property(property: "kode", type: "string", example: "A001"),
-                new OA\Property(property: "nama", type: "string", example: "Laptop Asus"),
-                new OA\Property(property: "kategori_alat_id", type: "integer", example: 1),
-                new OA\Property(property: "kondisi", type: "string", example: "baik"),
-                new OA\Property(property: "deskripsi", type: "string", example: "Laptop untuk keperluan desain"),
-                new OA\Property(property: "lokasi", type: "string", example: "Lab Komputer"),
-                new OA\Property(property: "foto", type: "string", format: "binary", example: "foto_alat.jpg"),
-                new OA\Property(property: "stok", type: "integer", example: 10),
-                new OA\Property(property: "status", type: "string", example: "tersedia")
-            ]
+        content: new OA\MediaType(
+            mediaType: "multipart/form-data",
+            schema: new OA\Schema(
+                required: ["kode", "nama"],
+                properties: [
+                    new OA\Property(property: "kode", type: "string"),
+                    new OA\Property(property: "nama", type: "string"),
+                    new OA\Property(property: "kategori_alat_id", type: "integer"),
+                    new OA\Property(property: "kondisi", type: "string"),
+                    new OA\Property(property: "deskripsi", type: "string"),
+                    new OA\Property(property: "lokasi", type: "string"),
+                    new OA\Property(property: "foto", type: "string", format: "binary"),
+                    new OA\Property(property: "stok", type: "integer"),
+                    new OA\Property(property: "status", type: "string"),
+                ]
+            )
         )
     )]
     #[OA\Response(response: 201, description: "Berhasil menambahkan alat")]
@@ -141,7 +147,8 @@ class AlatController extends Controller
     #[OA\Patch(
         path: "/api/alats/{id}",
         summary: "Update alat",
-        tags: ["Alat"]
+        tags: ["Alat"],
+        security: [["bearerAuth" => []]]
     )]
     #[OA\Parameter(
         name: "id",
@@ -220,7 +227,8 @@ class AlatController extends Controller
     #[OA\Delete(
         path: "/api/alats/{id}",
         summary: "Hapus alat",
-        tags: ["Alat"]
+        tags: ["Alat"],
+        security: [["bearerAuth" => []]]
     )]
     #[OA\Parameter(
         name: "id",

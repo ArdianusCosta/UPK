@@ -15,4 +15,15 @@ class Alat extends Model
     {
         return $this->belongsTo(MDKategoriAlat::class, 'kategori_alat_id');
     }
+
+    protected $appends = ['foto_url'];
+
+    public function getFotoUrlAttribute()
+    {
+        if (!$this->foto) {
+            return null;
+        }
+
+        return url('uploads/alat/' . $this->foto);
+    }
 }
