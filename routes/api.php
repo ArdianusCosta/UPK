@@ -2,8 +2,10 @@
 
 use App\Http\Controllers\AlatController;
 use App\Http\Controllers\Auth\AuthController;
+use App\Http\Controllers\ChatController;
 use App\Http\Controllers\LoginController;
 use App\Http\Controllers\MasterData\KategoriAlatController;
+use App\Http\Controllers\PeminjamanController;
 use Illuminate\Support\Facades\Route;
 
 Route::post('/login', [LoginController::class, 'login']);
@@ -27,5 +29,20 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/', [AlatController::class, 'store'])->middleware('permission:alat.create');
         Route::patch('/{id}', [AlatController::class, 'update'])->middleware('permission:alat.update');
         Route::delete('/{id}', [AlatController::class, 'delete'])->middleware('permission:alat.delete');
+    });
+
+    Route::prefix('peminjamans')->group(function () {
+        Route::get('/', [PeminjamanController::class, 'index']);
+        Route::post('/', [PeminjamanController::class, 'store']);
+        Route::post('kembalikan', [PeminjamanController::class, 'kembalikan']);
+        Route::get('/{id}', [PeminjamanController::class, 'show']);
+        Route::delete('/{id}', [PeminjamanController::class, 'destroy']);
+    });
+
+    Route::middleware('auth:sanctum')->group(function () {
+        Route::get('/users-chat', [ChatController::class, 'users']);
+        Route::get('/messages/{userId}', [ChatController::class, 'getMessages']);
+        Route::post('/messages', [ChatController::class, 'sendMessage']);
+        Route::post('/messages/{userId}/read', [ChatController::class, 'markAsRead']);
     });
 });

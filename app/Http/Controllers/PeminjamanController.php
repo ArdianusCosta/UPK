@@ -1,0 +1,310 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\Alat;
+use App\Models\Peminjaman;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use OpenApi\Attributes as OA;
+
+#[OA\Tag(
+    name: "Peminjaman",
+    description: "API untuk mengelola transaksi peminjaman dan pengembalian alat"
+)]
+class PeminjamanController extends Controller
+{
+    #[OA\Get(
+        path: "/api/peminjamans",
+        summary: "Ambil semua data peminjaman",
+        security: [["bearerAuth" => []]],
+        tags: ["Peminjaman"]
+    )]
+    #[OA\Response(
+        response: 200,
+        description: "Berhasil mengambil data peminjaman",
+        content: new OA\JsonContent(
+            example: [
+                "status" => "success",
+                "data" => [
+                    [
+                        "id" => 1,
+                        "kode" => "PINJAM-00001",
+                        "peminjam_id" => 1,
+                        "alat_id" => 1,
+                        "tanggal_pinjam" => "2026-02-23",
+                        "tanggal_kembali" => null,
+                        "status" => "Dipinjam",
+                        "peminjam" => ["id" => 1, "name" => "User Name"],
+                        "alat" => ["id" => 1, "nama" => "Laptop Asus", "foto" => "image.jpg"]
+                    ]
+                ]
+            ]
+        )
+    )]
+    public function index()
+    {
+        $peminjamans = Peminjaman::with(['peminjam:id,name', 'alat:id,nama,foto'])->orderBy('created_at', 'desc')->get();
+
+        return response()->json([
+            'status' => 'success',
+            'data' => $peminjamans
+        ]);
+    }
+
+    #[OA\Post(
+        path: "/api/peminjamans",
+        summary: "Buat peminjaman baru",
+        security: [["bearerAuth" => []]],
+        tags: ["Peminjaman"]
+    )]
+    #[OA\RequestBody(
+        required: true,
+        content: new OA\JsonContent(
+            required: ["alat_id", "peminjam_id"],
+            properties: [
+                new OA\Property(property: "alat_id", type: "integer", example: 1),
+                new OA\Property(property: "peminjam_id", type: "integer", example: 1),
+                new OA\Property(property: "tanggal_pinjam", type: "string", format: "date", example: "2026-02-23"),
+                new OA\Property(property: "status", type: "string", example: "Dipinjam")
+            ]
+        )
+    )]
+    #[OA\Response(
+        response: 201,
+        description: "Peminjaman berhasil dibuat",
+        content: new OA\JsonContent(
+            example: [
+                "status" => "success",
+                "message" => "Peminjaman berhasil dicatat",
+                "data" => ["id" => 1, "kode" => "PINJAM-00001"]
+            ]
+        )
+    )]
+    public function store(Request $request)
+    {
+        $request->validate([
+            'alat_id' => 'required|exists:alats,id',
+            'peminjam_id' => 'required|exists:users,id',
+            'tanggal_pinjam' => 'nullable|date',
+            'status' => 'nullable|string|in:Dipinjam,Terlambat',
+        ]);
+
+        return DB::transaction(function () use ($request) {
+            $alat = Alat::lockForUpdate()->find($request->alat_id);
+
+            if ($alat->stok <= 0) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Stok alat tidak mencukupi'
+                ], 422);
+            }
+
+            $alat->decrement('stok');
+
+            $peminjaman = Peminjaman::create([
+                'peminjam_id' => $request->peminjam_id,
+                'alat_id' => $request->alat_id,
+                'tanggal_pinjam' => $request->tanggal_pinjam ?? now(),
+                'status' => $request->status ?? 'Dipinjam',
+            ]);
+
+            $peminjaman->refresh();
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Peminjaman berhasil dicatat',
+                'data' => $peminjaman->load(['peminjam:id,name', 'alat:id,nama,foto'])
+            ], 201);
+        });
+    }
+
+    #[OA\Get(
+        path: "/api/peminjamans/{id}",
+        summary: "Ambil detail peminjaman",
+        security: [["bearerAuth" => []]],
+        tags: ["Peminjaman"]
+    )]
+    #[OA\Parameter(name: "id", in: "path", required: true, schema: new OA\Schema(type: "integer"))]
+    #[OA\Response(
+        response: 200,
+        description: "Berhasil mengambil detail peminjaman",
+        content: new OA\JsonContent(
+            example: [
+                "status" => "success",
+                "data" => [
+                    "id" => 1,
+                    "kode" => "PINJAM-00001",
+                    "peminjam" => ["id" => 1, "name" => "User Name"],
+                    "alat" => ["id" => 1, "nama" => "Laptop Asus", "foto" => "image.jpg"]
+                ]
+            ]
+        )
+    )]
+    public function show($id)
+    {
+        $peminjaman = Peminjaman::with(['peminjam:id,name', 'alat:id,nama,foto'])->findOrFail($id);
+        return response()->json([
+            'status' => 'success',
+            'data' => $peminjaman
+        ]);
+    }
+
+    #[OA\Patch(
+        path: "/api/peminjamans/{id}",
+        summary: "Update data peminjaman",
+        security: [["bearerAuth" => []]],
+        tags: ["Peminjaman"]
+    )]
+    #[OA\Parameter(name: "id", in: "path", required: true, schema: new OA\Schema(type: "integer"))]
+    #[OA\RequestBody(
+        content: new OA\JsonContent(
+            properties: [
+                new OA\Property(property: "tanggal_pinjam", type: "string", format: "date"),
+                new OA\Property(property: "status", type: "string", enum: ["Dipinjam", "Terlambat", "Dikembalikan"])
+            ]
+        )
+    )]
+    #[OA\Response(
+        response: 200,
+        description: "Data peminjaman berhasil diperbarui",
+        content: new OA\JsonContent(
+            example: [
+                "status" => "success",
+                "message" => "Data peminjaman berhasil diperbarui"
+            ]
+        )
+    )]
+    public function update(Request $request, $id)
+    {
+        $peminjaman = Peminjaman::findOrFail($id);
+        
+        $validated = $request->validate([
+            'tanggal_pinjam' => 'sometimes|date',
+            'status' => 'sometimes|string|in:Dipinjam,Terlambat,Dikembalikan',
+        ]);
+
+        return DB::transaction(function () use ($request, $peminjaman, $validated) {
+            $oldStatus = $peminjaman->status;
+            $newStatus = $request->status ?? $oldStatus;
+
+            if ($newStatus === 'Dikembalikan' && $oldStatus !== 'Dikembalikan') {
+                $alat = Alat::lockForUpdate()->find($peminjaman->alat_id);
+                $alat->increment('stok');
+                $peminjaman->tanggal_kembali = now();
+            } elseif ($oldStatus === 'Dikembalikan' && $newStatus !== 'Dikembalikan') {
+                $alat = Alat::lockForUpdate()->find($peminjaman->alat_id);
+                if ($alat->stok <= 0) {
+                    return response()->json([
+                        'status' => 'error',
+                        'message' => 'Stok alat tidak mencukupi untuk membatalkan pengembalian'
+                    ], 422);
+                }
+                $alat->decrement('stok');
+                $peminjaman->tanggal_kembali = null;
+            }
+
+            $peminjaman->update($validated);
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Data peminjaman berhasil diperbarui',
+                'data' => $peminjaman->load(['peminjam:id,name', 'alat:id,nama,foto'])
+            ]);
+        });
+    }
+
+    #[OA\Post(
+        path: "/api/peminjamans/kembalikan",
+        summary: "Proses pengembalian alat via Kode/Scan",
+        security: [["bearerAuth" => []]],
+        tags: ["Peminjaman"]
+    )]
+    #[OA\RequestBody(
+        required: true,
+        content: new OA\JsonContent(
+            required: ["kode"],
+            properties: [
+                new OA\Property(property: "kode", type: "string", example: "PINJAM-00001")
+            ]
+        )
+    )]
+    #[OA\Response(
+        response: 200,
+        description: "Alat berhasil dikembalikan",
+        content: new OA\JsonContent(
+            example: [
+                "status" => "success",
+                "message" => "Alat berhasil dikembalikan",
+                "data" => ["id" => 1, "kode" => "PINJAM-00001", "status" => "Dikembalikan", "tanggal_kembali" => "2026-02-23 22:35:00"]
+            ]
+        )
+    )]
+    public function kembalikan(Request $request)
+    {
+        $request->validate([
+            'kode' => 'required|string|exists:peminjamen,kode'
+        ]);
+
+        return DB::transaction(function () use ($request) {
+            $peminjaman = Peminjaman::where('kode', $request->kode)->firstOrFail();
+
+            if ($peminjaman->status === 'Dikembalikan') {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Alat ini sudah dikembalikan sebelumnya'
+                ], 422);
+            }
+
+            $alat = Alat::lockForUpdate()->find($peminjaman->alat_id);
+            $alat->increment('stok');
+
+            $peminjaman->update([
+                'status' => 'Dikembalikan',
+                'tanggal_kembali' => now()
+            ]);
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Alat berhasil dikembalikan',
+                'data' => $peminjaman->load(['peminjam:id,name', 'alat:id,nama,foto'])
+            ]);
+        });
+    }
+
+    #[OA\Delete(
+        path: "/api/peminjamans/{id}",
+        summary: "Hapus/Batalkan peminjaman (Kembalikan stok)",
+        security: [["bearerAuth" => []]],
+        tags: ["Peminjaman"]
+    )]
+    #[OA\Parameter(name: "id", in: "path", required: true, schema: new OA\Schema(type: "integer"))]
+    #[OA\Response(
+        response: 200,
+        description: "Data peminjaman berhasil dihapus",
+        content: new OA\JsonContent(
+            example: [
+                "status" => "success",
+                "message" => "Data peminjaman dihapus"
+            ]
+        )
+    )]
+    public function destroy($id)
+    {
+        return DB::transaction(function () use ($id) {
+            $peminjaman = Peminjaman::findOrFail($id);
+            
+            if ($peminjaman->status !== 'Dikembalikan') {
+                $alat = Alat::lockForUpdate()->find($peminjaman->alat_id);
+                $alat->increment('stok');
+            }
+
+            $peminjaman->delete();
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Data peminjaman dihapus'
+            ]);
+        });
+    }
+}
