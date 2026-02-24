@@ -6,11 +6,14 @@ use App\Http\Controllers\ChatController;
 use App\Http\Controllers\LoginController;
 use App\Http\Controllers\MasterData\KategoriAlatController;
 use App\Http\Controllers\PeminjamanController;
+use App\Http\Controllers\Api\DashboardController;
 use Illuminate\Support\Facades\Route;
 
 Route::post('/login', [LoginController::class, 'login']);
 
 Route::middleware('auth:sanctum')->group(function () {
+
+    Route::get('/dashboard/stats', [DashboardController::class, 'getStats']);
 
     Route::get('/user', [AuthController::class, 'getUser']);
     Route::post('/logout', [LoginController::class, 'logout']);

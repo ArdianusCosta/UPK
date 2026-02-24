@@ -271,6 +271,25 @@
                 ]
             }
         },
+        "/api/dashboard/stats": {
+            "get": {
+                "tags": [
+                    "Dashboard"
+                ],
+                "summary": "Ambil statistik untuk dashboard",
+                "operationId": "97f93f93be9753e12dfa48ed63db092c",
+                "responses": {
+                    "200": {
+                        "description": "Berhasil mengambil statistik dashboard"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/api/pengembalians": {
             "get": {
                 "tags": [
@@ -352,6 +371,10 @@
                                     "catatan": {
                                         "type": "string",
                                         "example": "Alat kembali lengkap"
+                                    },
+                                    "foto": {
+                                        "type": "string",
+                                        "format": "binary"
                                     }
                                 },
                                 "type": "object"
@@ -470,6 +493,10 @@
                                     },
                                     "catatan": {
                                         "type": "string"
+                                    },
+                                    "tanggal_dikembalikan": {
+                                        "type": "string",
+                                        "format": "date-time"
                                     }
                                 },
                                 "type": "object"
@@ -480,6 +507,54 @@
                 "responses": {
                     "200": {
                         "description": "Data pengembalian berhasil diupdate"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/pengembalians/trashed": {
+            "get": {
+                "tags": [
+                    "Pengembalian"
+                ],
+                "summary": "Ambil data pengembalian yang dihapus (Trash)",
+                "operationId": "134ee048215ed055312d7688eb9a496f",
+                "responses": {
+                    "200": {
+                        "description": "Berhasil mengambil data trashed"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/pengembalians/{id}/restore": {
+            "post": {
+                "tags": [
+                    "Pengembalian"
+                ],
+                "summary": "Kembalikan data pengembalian yang dihapus",
+                "operationId": "5b8cd00dd191dd54690f02c7fa4c2c53",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Data berhasil di-restore"
                     }
                 },
                 "security": [
@@ -994,6 +1069,10 @@
         {
             "name": "Peminjaman",
             "description": "API untuk mengelola transaksi peminjaman dan pengembalian alat"
+        },
+        {
+            "name": "Dashboard",
+            "description": "Dashboard"
         },
         {
             "name": "Auth",
