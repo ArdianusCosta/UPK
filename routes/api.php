@@ -34,10 +34,15 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::prefix('peminjamans')->group(function () {
         Route::get('/', [PeminjamanController::class, 'index']);
         Route::post('/', [PeminjamanController::class, 'store']);
-        Route::post('kembalikan', [PeminjamanController::class, 'kembalikan']);
         Route::get('/{id}', [PeminjamanController::class, 'show']);
         Route::delete('/{id}', [PeminjamanController::class, 'destroy']);
     });
+
+    Route::prefix('pengembalians')->group(function () {
+        Route::get('/trashed', [\App\Http\Controllers\Api\PengembalianController::class, 'trashed']);
+        Route::post('/{id}/restore', [\App\Http\Controllers\Api\PengembalianController::class, 'restore']);
+    });
+    Route::apiResource('pengembalians', \App\Http\Controllers\Api\PengembalianController::class);
 
     Route::middleware('auth:sanctum')->group(function () {
         Route::get('/users-chat', [ChatController::class, 'users']);
