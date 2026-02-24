@@ -194,6 +194,7 @@ class AlatController extends Controller
                     new OA\Property(property: "nama", type: "string", example: "Laptop Asus Update"),
                     new OA\Property(property: "stok", type: "integer", example: 5),
                     new OA\Property(property: "status", type: "string", example: "maintenance"),
+                    new OA\Property(property: "kategori_alat_id", type: "integer", example: 1),
                     new OA\Property(property: "foto", type: "string", format: "binary")
                 ]
             )
@@ -215,6 +216,7 @@ class AlatController extends Controller
 
         $validated = $request->validate([
             'nama' => 'sometimes|string|max:255',
+            'kategori_alat_id' => 'nullable|exists:m_d_kategori_alats,id',
             'foto' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
             'stok' => 'nullable|integer|min:0',
             'status' => 'nullable|string|in:tersedia,dipinjam,maintenance',

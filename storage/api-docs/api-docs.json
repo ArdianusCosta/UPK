@@ -491,6 +491,314 @@
                     }
                 }
             }
+        },
+        "/api/peminjamans": {
+            "get": {
+                "tags": [
+                    "Peminjaman"
+                ],
+                "summary": "Ambil semua data peminjaman",
+                "operationId": "0900f747fceb68f3ec3ee8a723071c86",
+                "responses": {
+                    "200": {
+                        "description": "Berhasil mengambil data peminjaman",
+                        "content": {
+                            "application/json": {
+                                "schema": {},
+                                "example": {
+                                    "status": "success",
+                                    "data": [
+                                        {
+                                            "id": 1,
+                                            "kode": "PINJAM-00001",
+                                            "peminjam_id": 1,
+                                            "alat_id": 1,
+                                            "tanggal_pinjam": "2026-02-23",
+                                            "tanggal_kembali": null,
+                                            "status": "Dipinjam",
+                                            "peminjam": {
+                                                "id": 1,
+                                                "name": "User Name"
+                                            },
+                                            "alat": {
+                                                "id": 1,
+                                                "nama": "Laptop Asus",
+                                                "foto": "image.jpg"
+                                            }
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Peminjaman"
+                ],
+                "summary": "Buat peminjaman baru",
+                "operationId": "977544c8f330c5e7c0e112d53ef75209",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "alat_id",
+                                    "peminjam_id"
+                                ],
+                                "properties": {
+                                    "alat_id": {
+                                        "type": "integer",
+                                        "example": 1
+                                    },
+                                    "peminjam_id": {
+                                        "type": "integer",
+                                        "example": 1
+                                    },
+                                    "tanggal_pinjam": {
+                                        "type": "string",
+                                        "format": "date",
+                                        "example": "2026-02-23"
+                                    },
+                                    "status": {
+                                        "type": "string",
+                                        "example": "Dipinjam"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Peminjaman berhasil dibuat",
+                        "content": {
+                            "application/json": {
+                                "schema": {},
+                                "example": {
+                                    "status": "success",
+                                    "message": "Peminjaman berhasil dicatat",
+                                    "data": {
+                                        "id": 1,
+                                        "kode": "PINJAM-00001"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/peminjamans/{id}": {
+            "get": {
+                "tags": [
+                    "Peminjaman"
+                ],
+                "summary": "Ambil detail peminjaman",
+                "operationId": "e4635fb5e7e5bdfe823bad05508718f9",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Berhasil mengambil detail peminjaman",
+                        "content": {
+                            "application/json": {
+                                "schema": {},
+                                "example": {
+                                    "status": "success",
+                                    "data": {
+                                        "id": 1,
+                                        "kode": "PINJAM-00001",
+                                        "peminjam": {
+                                            "id": 1,
+                                            "name": "User Name"
+                                        },
+                                        "alat": {
+                                            "id": 1,
+                                            "nama": "Laptop Asus",
+                                            "foto": "image.jpg"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Peminjaman"
+                ],
+                "summary": "Hapus/Batalkan peminjaman (Kembalikan stok)",
+                "operationId": "7c86fce857dbadd78f9f225f4a8fe86b",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Data peminjaman berhasil dihapus",
+                        "content": {
+                            "application/json": {
+                                "schema": {},
+                                "example": {
+                                    "status": "success",
+                                    "message": "Data peminjaman dihapus"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "patch": {
+                "tags": [
+                    "Peminjaman"
+                ],
+                "summary": "Update data peminjaman",
+                "operationId": "2e4f763c4211551101a96a07e40654b8",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "tanggal_pinjam": {
+                                        "type": "string",
+                                        "format": "date"
+                                    },
+                                    "status": {
+                                        "type": "string",
+                                        "enum": [
+                                            "Dipinjam",
+                                            "Terlambat",
+                                            "Dikembalikan"
+                                        ]
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Data peminjaman berhasil diperbarui",
+                        "content": {
+                            "application/json": {
+                                "schema": {},
+                                "example": {
+                                    "status": "success",
+                                    "message": "Data peminjaman berhasil diperbarui"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/peminjamans/kembalikan": {
+            "post": {
+                "tags": [
+                    "Peminjaman"
+                ],
+                "summary": "Proses pengembalian alat via Kode/Scan",
+                "operationId": "d925bb325be8a457233f90ef53eff103",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "kode"
+                                ],
+                                "properties": {
+                                    "kode": {
+                                        "type": "string",
+                                        "example": "PINJAM-00001"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Alat berhasil dikembalikan",
+                        "content": {
+                            "application/json": {
+                                "schema": {},
+                                "example": {
+                                    "status": "success",
+                                    "message": "Alat berhasil dikembalikan",
+                                    "data": {
+                                        "id": 1,
+                                        "kode": "PINJAM-00001",
+                                        "status": "Dikembalikan",
+                                        "tanggal_kembali": "2026-02-23 22:35:00"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
         }
     },
     "components": {
@@ -510,6 +818,10 @@
         {
             "name": "Master Data - Kategori Alat",
             "description": "API untuk mengelola kategori alat"
+        },
+        {
+            "name": "Peminjaman",
+            "description": "API untuk mengelola transaksi peminjaman dan pengembalian alat"
         },
         {
             "name": "Auth",
