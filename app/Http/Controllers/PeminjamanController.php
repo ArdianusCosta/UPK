@@ -99,20 +99,20 @@ class PeminjamanController extends Controller
                 ], 422);
             }
 
-            $alat->decrement('stok');
+            // $alat->decrement('stok'); // Stok dikurangi saat disetujui petugas
 
             $peminjaman = Peminjaman::create([
                 'peminjam_id' => $request->peminjam_id,
                 'alat_id' => $request->alat_id,
-                'tanggal_pinjam' => $request->tanggal_pinjam ?? now(),
-                'status' => $request->status ?? 'Dipinjam',
+                'tanggal_pinjam' => $request->tanggal_pinjam ?? null,
+                'status' => $request->status ?? 'Pending',
             ]);
 
             $peminjaman->refresh();
 
             return response()->json([
                 'status' => 'success',
-                'message' => 'Peminjaman berhasil dicatat',
+                'message' => 'Pengajuan peminjaman berhasil dikirim, menunggu persetujuan petugas.',
                 'data' => $peminjaman->load(['peminjam:id,name', 'alat:id,nama,foto'])
             ], 201);
         });
@@ -180,7 +180,7 @@ class PeminjamanController extends Controller
         
         $validated = $request->validate([
             'tanggal_pinjam' => 'sometimes|date',
-            'status' => 'sometimes|string|in:Dipinjam,Terlambat,Dikembalikan',
+            'status' => 'sometimes|string|in:Pending,Dipinjam,Ditolak,Terlambat,Dikembalikan',
         ]);
 
         return DB::transaction(function () use ($request, $peminjaman, $validated) {
@@ -192,6 +192,99 @@ class PeminjamanController extends Controller
                 'data' => $peminjaman->load(['peminjam:id,name', 'alat:id,nama,foto'])
             ]);
         });
+    }
+
+    #[OA\Post(
+        path: "/api/peminjamans/{id}/approve",
+        summary: "Setujui pengajuan peminjaman",
+        security: [["bearerAuth" => []]],
+        tags: ["Peminjaman"]
+    )]
+    #[OA\Response(
+        response: 200,
+        description: "Peminjaman disetujui",
+        content: new OA\JsonContent(
+            example: [
+                "status" => "success",
+                "message" => "Peminjaman disetujui",
+                "data" => ["id" => 1, "status" => "Dipinjam"]
+            ]
+        )
+    )]
+    public function approve(Request $request, $id)
+    {
+        return DB::transaction(function () use ($id) {
+            $peminjaman = Peminjaman::findOrFail($id);
+
+            if ($peminjaman->status !== 'Pending') {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Hanya pengajuan berstatus Pending yang dapat disetujui'
+                ], 422);
+            }
+
+            $alat = Alat::lockForUpdate()->find($peminjaman->alat_id);
+
+            if ($alat->stok <= 0) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Stok alat tidak mencukupi untuk menyetujui peminjaman ini'
+                ], 422);
+            }
+
+            $alat->decrement('stok');
+
+            $peminjaman->update([
+                'status' => 'Dipinjam',
+                'tanggal_pinjam' => now(),
+                'petugas_id' => auth()->id()
+            ]);
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Peminjaman berhasil disetujui',
+                'data' => $peminjaman->load(['peminjam:id,name', 'alat:id,nama,foto', 'petugas:id,name'])
+            ]);
+        });
+    }
+
+    #[OA\Post(
+        path: "/api/peminjamans/{id}/reject",
+        summary: "Tolak pengajuan peminjaman",
+        security: [["bearerAuth" => []]],
+        tags: ["Peminjaman"]
+    )]
+    #[OA\Response(
+        response: 200,
+        description: "Peminjaman ditolak",
+        content: new OA\JsonContent(
+            example: [
+                "status" => "success",
+                "message" => "Peminjaman ditolak"
+            ]
+        )
+    )]
+    public function reject(Request $request, $id)
+    {
+        $peminjaman = Peminjaman::findOrFail($id);
+
+        if ($peminjaman->status !== 'Pending') {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Hanya pengajuan berstatus Pending yang dapat ditolak'
+            ], 422);
+        }
+
+        $peminjaman->update([
+            'status' => 'Ditolak',
+            'petugas_id' => auth()->id()
+        ]);
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Peminjaman telah ditolak',
+            'data' => $peminjaman->load(['peminjam:id,name', 'alat:id,nama,foto', 'petugas:id,name'])
+        ]);
     }
 
 

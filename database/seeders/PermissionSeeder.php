@@ -27,6 +27,7 @@ class PermissionSeeder extends Seeder
             'peminjaman.create',
             'peminjaman.update',
             'peminjaman.delete',
+            'peminjaman.approve',
 
             'pengembalian.view',
             'pengembalian.create',

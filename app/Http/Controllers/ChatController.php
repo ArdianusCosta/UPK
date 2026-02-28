@@ -45,18 +45,45 @@ class ChatController extends Controller
     {
         $request->validate([
             'receiver_id' => 'required|exists:users,id',
-            'message' => 'required|string'
+            'message' => 'nullable|string',
+            'image' => 'nullable|image|max:2048'
         ]);
+
+        if (!$request->message && !$request->hasFile('image')) {
+            return response()->json(['message' => 'Message or image is required'], 422);
+        }
+
+        $imagePath = null;
+        if ($request->hasFile('image')) {
+            $imagePath = $request->file('image')->store('chat', 'public');
+        }
 
         $message = Message::create([
             'sender_id' => $request->user()->id,
             'receiver_id' => $request->receiver_id,
             'message' => $request->message,
+            'image' => $imagePath,
         ]);
 
         broadcast(new MessageSent($message))->toOthers();
 
         return $message->load('sender:id,name');
+    }
+
+    public function destroyMessage(Request $request, $id)
+    {
+        $message = Message::findOrFail($id);
+
+        if ($message->sender_id !== $request->user()->id) {
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
+
+        $messageData = $message->toArray();
+        $message->delete();
+
+        broadcast(new \App\Events\MessageDeleted($messageData))->toOthers();
+
+        return response()->json(['status' => 'success']);
     }
 
     public function markAsRead(Request $request, $userId)

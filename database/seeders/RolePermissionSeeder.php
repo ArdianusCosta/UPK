@@ -26,6 +26,7 @@ class RolePermissionSeeder extends Seeder
                 'kategori.view',
                 'peminjaman.view',
                 'peminjaman.create',
+                'peminjaman.approve',
                 'pengembalian.view',
                 'pengembalian.create',
                 'pengembalian.scan',

@@ -7,6 +7,7 @@ use App\Http\Controllers\LoginController;
 use App\Http\Controllers\MasterData\KategoriAlatController;
 use App\Http\Controllers\PeminjamanController;
 use App\Http\Controllers\Api\DashboardController;
+use App\Http\Controllers\Api\UserController;
 use Illuminate\Support\Facades\Route;
 
 Route::post('/login', [LoginController::class, 'login']);
@@ -39,18 +40,34 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/', [PeminjamanController::class, 'store']);
         Route::get('/{id}', [PeminjamanController::class, 'show']);
         Route::delete('/{id}', [PeminjamanController::class, 'destroy']);
+        
+        // Approval
+        Route::post('/{id}/approve', [PeminjamanController::class, 'approve'])->middleware('permission:peminjaman.approve');
+        Route::post('/{id}/reject', [PeminjamanController::class, 'reject'])->middleware('permission:peminjaman.approve');
     });
 
     Route::prefix('pengembalians')->group(function () {
-        Route::get('/trashed', [\App\Http\Controllers\Api\PengembalianController::class, 'trashed']);
-        Route::post('/{id}/restore', [\App\Http\Controllers\Api\PengembalianController::class, 'restore']);
+        Route::get('/trashed', [\App\Http\Controllers\Api\PengembalianController::class, 'trashed'])->middleware('permission:pengembalian.view');
+        Route::post('/{id}/restore', [\App\Http\Controllers\Api\PengembalianController::class, 'restore'])->middleware('permission:pengembalian.view');
     });
-    Route::apiResource('pengembalians', \App\Http\Controllers\Api\PengembalianController::class);
+    Route::apiResource('pengembalians', \App\Http\Controllers\Api\PengembalianController::class)->middleware([
+        'index' => 'permission:pengembalian.view',
+        'show' => 'permission:pengembalian.view',
+        'store' => 'permission:pengembalian.create',
+        'update' => 'permission:pengembalian.update',
+        'destroy' => 'permission:pengembalian.delete',
+    ]);
 
     Route::middleware('auth:sanctum')->group(function () {
         Route::get('/users-chat', [ChatController::class, 'users']);
         Route::get('/messages/{userId}', [ChatController::class, 'getMessages']);
         Route::post('/messages', [ChatController::class, 'sendMessage']);
+        Route::delete('/messages/{id}', [ChatController::class, 'destroyMessage']);
         Route::post('/messages/{userId}/read', [ChatController::class, 'markAsRead']);
+    });
+
+    Route::middleware('auth:sanctum')->group(function () {
+        Route::get('/users-profile', [UserController::class, 'index']);
+        Route::patch('/users-profile/{id}', [UserController::class, 'update']);
     });
 });

@@ -15,9 +15,10 @@ return new class extends Migration
             $table->id();
             $table->string('kode')->unique()->nullable();
             $table->foreignId('peminjam_id')->constrained('users')->onDelete('cascade');
+            $table->foreignId('petugas_id')->nullable()->constrained('users')->onDelete('set null');
             $table->foreignId('alat_id')->constrained('alats')->onDelete('cascade');
-            $table->date('tanggal_pinjam')->default(now());
-            $table->enum('status', ['Dipinjam', 'Terlambat'])->default('Dipinjam');
+            $table->date('tanggal_pinjam')->nullable();
+            $table->enum('status', ['Pending', 'Dipinjam', 'Ditolak', 'Terlambat', 'Dikembalikan'])->default('Pending');
             $table->timestamps();
         });
     }

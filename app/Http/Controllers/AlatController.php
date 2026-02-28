@@ -149,7 +149,7 @@ class AlatController extends Controller
         $validated = $request->validate([
             'nama' => 'required|string|max:255',
             'kategori_alat_id' => 'nullable|exists:m_d_kategori_alats,id',
-            'foto' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'foto' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
             'stok' => 'nullable|integer|min:0',
             'status' => 'nullable|string|in:tersedia,dipinjam,maintenance',
         ]);
@@ -217,7 +217,7 @@ class AlatController extends Controller
         $validated = $request->validate([
             'nama' => 'sometimes|string|max:255',
             'kategori_alat_id' => 'nullable|exists:m_d_kategori_alats,id',
-            'foto' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'foto' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
             'stok' => 'nullable|integer|min:0',
             'status' => 'nullable|string|in:tersedia,dipinjam,maintenance',
         ]);

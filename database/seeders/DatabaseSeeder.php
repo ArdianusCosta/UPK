@@ -16,15 +16,31 @@ class DatabaseSeeder extends Seeder
             RolePermissionSeeder::class,
         ]);
 
-        $adminUser = User::firstOrCreate(
+        $adminUser = User::updateOrCreate(
             ['email' => 'admin@admin.com'],
             [
-                'name' => 'admin',
+                'name' => 'Admin User',
                 'password' => bcrypt('admin123'),
             ]
         );
+        $adminUser->assignRole('Admin');
 
-        $adminRole = Role::where('name', 'Admin')->first();
-        $adminUser->assignRole($adminRole);
+        $petugasUser = User::updateOrCreate(
+            ['email' => 'petugas@admin.com'],
+            [
+                'name' => 'Petugas User',
+                'password' => bcrypt('password123'),
+            ]
+        );
+        $petugasUser->assignRole('Petugas');
+
+        $peminjamUser = User::updateOrCreate(
+            ['email' => 'peminjam@admin.com'],
+            [
+                'name' => 'Peminjam User',
+                'password' => bcrypt('password123'),
+            ]
+        );
+        $peminjamUser->assignRole('Peminjam');
     }
 }

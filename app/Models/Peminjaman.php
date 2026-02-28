@@ -8,6 +8,7 @@ class Peminjaman extends Model
 {
     protected $fillable = [
         'peminjam_id',
+        'petugas_id',
         'alat_id',
         'kode',
         'tanggal_pinjam',
@@ -22,6 +23,11 @@ class Peminjaman extends Model
     public function alat()
     {
         return $this->belongsTo(Alat::class, 'alat_id');
+    }
+
+    public function petugas()
+    {
+        return $this->belongsTo(User::class, 'petugas_id');
     }
 
     //logika untuk codenya karna nanti aku mau di generate otomatis
