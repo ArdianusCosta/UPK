@@ -49,9 +49,16 @@ class PengembalianController extends Controller
     )]
     public function index()
     {
-        $pengembalians = Pengembalian::with(['peminjaman.peminjam', 'peminjaman.alat'])
-            ->orderBy('created_at', 'desc')
-            ->get();
+        $query = Pengembalian::with(['peminjaman.peminjam', 'peminjaman.alat'])
+            ->orderBy('created_at', 'desc');
+
+        if (auth()->user()->hasRole('Peminjam')) {
+            $query->whereHas('peminjaman', function ($q) {
+                $q->where('peminjam_id', auth()->id());
+            });
+        }
+
+        $pengembalians = $query->get();
 
         return response()->json([
             'status' => 'success',
@@ -106,7 +113,7 @@ class PengembalianController extends Controller
                 $query->where('id', $request->peminjaman_id);
             }
 
-            $peminjaman = $query->where('status', 'Dipinjam')->first();
+            $peminjaman = $query->whereIn('status', ['Dipinjam', 'Terlambat'])->first();
 
             if (!$peminjaman) {
                 return response()->json([
@@ -247,23 +254,22 @@ class PengembalianController extends Controller
     {
         return DB::transaction(function () use ($id) {
             $pengembalian = Pengembalian::findOrFail($id);
+            
+            // Logika Stok: Jika pengembalian dihapus, stok berkurang lagi 
+            // karena alat dianggap belum benar-benar kembali (sesuai request user)
             $peminjaman = $pengembalian->peminjaman;
-            
-            // Revert Peminjaman status
-            $peminjaman->update(['status' => 'Dipinjam']);
-            
-            // Revert Alat status and stok
-            $alat = Alat::lockForUpdate()->find($peminjaman->alat_id);
-            if ($alat->stok > 0) {
-                $alat->decrement('stok');
+            if ($peminjaman) {
+                $alat = Alat::lockForUpdate()->find($peminjaman->alat_id);
+                if ($alat && $alat->stok > 0) {
+                    $alat->decrement('stok');
+                }
             }
-            $alat->update(['status' => 'dipinjam']);
 
             $pengembalian->delete();
 
             return response()->json([
                 'status' => 'success',
-                'message' => 'Data pengembalian berhasil dihapus (Status peminjaman dikembalikan ke Dipinjam).'
+                'message' => 'Data pengembalian berhasil dihapus.'
             ]);
         });
     }
@@ -280,10 +286,17 @@ class PengembalianController extends Controller
     )]
     public function trashed()
     {
-        $trashed = Pengembalian::onlyTrashed()
+        $query = Pengembalian::onlyTrashed()
             ->with(['peminjaman.peminjam', 'peminjaman.alat'])
-            ->orderBy('deleted_at', 'desc')
-            ->get();
+            ->orderBy('deleted_at', 'desc');
+
+        if (auth()->user()->hasRole('Peminjam')) {
+            $query->whereHas('peminjaman', function ($q) {
+                $q->where('peminjam_id', auth()->id());
+            });
+        }
+
+        $trashed = $query->get();
 
         return response()->json([
             'status' => 'success',
@@ -306,23 +319,17 @@ class PengembalianController extends Controller
     {
         return DB::transaction(function () use ($id) {
             $pengembalian = Pengembalian::onlyTrashed()->findOrFail($id);
-            $peminjaman = Peminjaman::findOrFail($pengembalian->peminjaman_id);
-
-            // 1. Restore the record
-            $pengembalian->restore();
-
-            // 2. Re-update Peminjaman status
-            $peminjaman->update(['status' => 'Dikembalikan']);
-
-            // 3. Re-update Alat status and increment stock
-            $alat = Alat::lockForUpdate()->find($peminjaman->alat_id);
-            $alat->increment('stok');
-
-            if ($pengembalian->kondisi_kembali === 'rusak') {
-                $alat->update(['status' => 'maintenance']);
-            } else {
-                $alat->update(['status' => 'tersedia']);
+            
+            // Logika Stok: Jika pengembalian di-restore, stok bertambah lagi
+            $peminjaman = Peminjaman::find($pengembalian->peminjaman_id);
+            if ($peminjaman) {
+                $alat = Alat::lockForUpdate()->find($peminjaman->alat_id);
+                if ($alat) {
+                    $alat->increment('stok');
+                }
             }
+
+            $pengembalian->restore();
 
             return response()->json([
                 'status' => 'success',

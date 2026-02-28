@@ -25,18 +25,35 @@ class DashboardController extends Controller
     )]
     public function getStats()
     {
+        $user = auth()->user();
+        $isPeminjam = $user->hasRole('Peminjam');
+
         // 1. Summary Stats
-        $totalAlat = Alat::count();
-        $alatDipinjam = Alat::where('status', 'dipinjam')->count();
-        $alatTersedia = Alat::where('status', 'tersedia')->count();
-        $alatMaintenance = Alat::where('status', 'maintenance')->count();
-        $totalPeminjaman = Peminjaman::count();
+        if ($isPeminjam) {
+            $totalAlat = Alat::count(); // Tetap tampilkan total alat yang tersedia secara umum
+            $alatDipinjam = Peminjaman::where('peminjam_id', $user->id)->where('status', 'Dipinjam')->count();
+            $alatTersedia = Alat::where('status', 'tersedia')->count();
+            $alatMaintenance = Alat::where('status', 'maintenance')->count();
+            $totalPeminjaman = Peminjaman::where('peminjam_id', $user->id)->count();
+        } else {
+            $totalAlat = Alat::count();
+            $alatDipinjam = Alat::where('status', 'dipinjam')->count();
+            $alatTersedia = Alat::where('status', 'tersedia')->count();
+            $alatMaintenance = Alat::where('status', 'maintenance')->count();
+            $totalPeminjaman = Peminjaman::count();
+        }
 
         // 2. Peminjaman Activity (last 7 days)
         $peminjamanActivity = [];
         for ($i = 6; $i >= 0; $i--) {
             $date = Carbon::now()->subDays($i);
-            $count = Peminjaman::whereDate('created_at', $date->toDateString())->count();
+            $query = Peminjaman::whereDate('created_at', $date->toDateString());
+            
+            if ($isPeminjam) {
+                $query->where('peminjam_id', $user->id);
+            }
+            
+            $count = $query->count();
             $peminjamanActivity[] = [
                 'name' => $date->format('D'),
                 'total' => $count,
@@ -45,12 +62,17 @@ class DashboardController extends Controller
         }
 
         // 3. Pengembalian Distribution by Category
-        $pengembalianDistribution = DB::table('pengembalians')
+        $distQuery = DB::table('pengembalians')
             ->join('peminjamen', 'pengembalians.peminjaman_id', '=', 'peminjamen.id')
             ->join('alats', 'peminjamen.alat_id', '=', 'alats.id')
             ->join('m_d_kategori_alats', 'alats.kategori_alat_id', '=', 'm_d_kategori_alats.id')
-            ->select('m_d_kategori_alats.nama_kategori_alat as name', DB::raw('count(*) as total'))
-            ->groupBy('m_d_kategori_alats.nama_kategori_alat')
+            ->select('m_d_kategori_alats.nama_kategori_alat as name', DB::raw('count(*) as total'));
+
+        if ($isPeminjam) {
+            $distQuery->where('peminjamen.peminjam_id', $user->id);
+        }
+
+        $pengembalianDistribution = $distQuery->groupBy('m_d_kategori_alats.nama_kategori_alat')
             ->get();
 
         return response()->json([

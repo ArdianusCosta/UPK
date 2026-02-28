@@ -43,7 +43,21 @@ class PeminjamanController extends Controller
     )]
     public function index()
     {
-        $peminjamans = Peminjaman::with(['peminjam:id,name', 'alat:id,nama,foto'])->orderBy('created_at', 'desc')->get();
+        $query = Peminjaman::with(['peminjam:id,name', 'alat:id,nama,foto'])->orderBy('created_at', 'desc');
+
+        // Role Peminjam hanya bisa melihat data sendiri
+        if (auth()->user()->hasRole('Peminjam')) {
+            $query->where('peminjam_id', auth()->id());
+        }
+
+        $peminjamans = $query->get();
+
+        // Update status terlambat secara dinamis jika diperlukan
+        foreach ($peminjamans as $peminjaman) {
+            if ($peminjaman->status === 'Dipinjam' && $peminjaman->tanggal_kembali && $peminjaman->tanggal_kembali < now()->toDateString()) {
+                $peminjaman->update(['status' => 'Terlambat']);
+            }
+        }
 
         return response()->json([
             'status' => 'success',
@@ -65,7 +79,8 @@ class PeminjamanController extends Controller
                 new OA\Property(property: "alat_id", type: "integer", example: 1),
                 new OA\Property(property: "peminjam_id", type: "integer", example: 1),
                 new OA\Property(property: "tanggal_pinjam", type: "string", format: "date", example: "2026-02-23"),
-                new OA\Property(property: "status", type: "string", example: "Dipinjam")
+                new OA\Property(property: "tanggal_kembali", type: "string", format: "date", example: "2026-02-28"),
+                new OA\Property(property: "status", type: "string", example: "Pending")
             ]
         )
     )]
@@ -86,33 +101,44 @@ class PeminjamanController extends Controller
             'alat_id' => 'required|exists:alats,id',
             'peminjam_id' => 'required|exists:users,id',
             'tanggal_pinjam' => 'nullable|date',
-            'status' => 'nullable|string|in:Dipinjam,Terlambat',
+            'tanggal_kembali' => 'nullable|date|after_or_equal:tanggal_pinjam',
+            'status' => 'nullable|string|in:Pending,Dipinjam,Terlambat',
         ]);
 
         return DB::transaction(function () use ($request) {
-            $alat = Alat::lockForUpdate()->find($request->alat_id);
+            $alat = Alat::lockForUpdate()->findOrFail($request->alat_id);
+            $status = $request->status ?? 'Pending';
 
-            if ($alat->stok <= 0) {
-                return response()->json([
-                    'status' => 'error',
-                    'message' => 'Stok alat tidak mencukupi'
-                ], 422);
+            // Jika status langsung Dipinjam atau Terlambat, cek stok
+            if (in_array($status, ['Dipinjam', 'Terlambat'])) {
+                if ($alat->stok <= 0) {
+                    return response()->json([
+                        'status' => 'error',
+                        'message' => 'Stok alat tidak mencukupi'
+                    ], 422);
+                }
+                $alat->decrement('stok');
+                $alat->update(['status' => 'dipinjam']);
             }
-
-            // $alat->decrement('stok'); // Stok dikurangi saat disetujui petugas
 
             $peminjaman = Peminjaman::create([
                 'peminjam_id' => $request->peminjam_id,
                 'alat_id' => $request->alat_id,
-                'tanggal_pinjam' => $request->tanggal_pinjam ?? null,
-                'status' => $request->status ?? 'Pending',
+                'tanggal_pinjam' => $request->tanggal_pinjam ?? now(),
+                'tanggal_kembali' => $request->tanggal_kembali ?? null,
+                'status' => $status,
+                'petugas_id' => in_array($status, ['Dipinjam', 'Terlambat']) ? auth()->id() : null,
             ]);
 
             $peminjaman->refresh();
 
+            $message = $status === 'Pending' 
+                ? 'Pengajuan peminjaman berhasil dikirim, menunggu persetujuan petugas.' 
+                : 'Peminjaman berhasil dicatat.';
+
             return response()->json([
                 'status' => 'success',
-                'message' => 'Pengajuan peminjaman berhasil dikirim, menunggu persetujuan petugas.',
+                'message' => $message,
                 'data' => $peminjaman->load(['peminjam:id,name', 'alat:id,nama,foto'])
             ], 201);
         });
@@ -160,7 +186,8 @@ class PeminjamanController extends Controller
         content: new OA\JsonContent(
             properties: [
                 new OA\Property(property: "tanggal_pinjam", type: "string", format: "date"),
-                new OA\Property(property: "status", type: "string", enum: ["Dipinjam", "Terlambat", "Dikembalikan"])
+                new OA\Property(property: "tanggal_kembali", type: "string", format: "date"),
+                new OA\Property(property: "status", type: "string", enum: ["Pending", "Dipinjam", "Terlambat", "Dikembalikan"])
             ]
         )
     )]
@@ -180,10 +207,40 @@ class PeminjamanController extends Controller
         
         $validated = $request->validate([
             'tanggal_pinjam' => 'sometimes|date',
+            'tanggal_kembali' => 'sometimes|date|after_or_equal:tanggal_pinjam',
             'status' => 'sometimes|string|in:Pending,Dipinjam,Ditolak,Terlambat,Dikembalikan',
         ]);
 
         return DB::transaction(function () use ($request, $peminjaman, $validated) {
+            $oldStatus = $peminjaman->status;
+            $newStatus = $validated['status'] ?? $oldStatus;
+
+            // Logika Stok:
+            // 1. Masuk ke status yang mengurangi stok
+            $toBorrowed = !in_array($oldStatus, ['Dipinjam', 'Terlambat']) && in_array($newStatus, ['Dipinjam', 'Terlambat']);
+            // 2. Keluar dari status yang mengurangi stok (termasuk ke Dikembalikan, Pending, Ditolak)
+            $fromBorrowed = in_array($oldStatus, ['Dipinjam', 'Terlambat']) && !in_array($newStatus, ['Dipinjam', 'Terlambat']);
+
+            $alat = Alat::lockForUpdate()->findOrFail($peminjaman->alat_id);
+
+            if ($toBorrowed) {
+                if ($alat->stok <= 0) {
+                    return response()->json([
+                        'status' => 'error',
+                        'message' => 'Stok alat tidak mencukupi'
+                    ], 422);
+                }
+                $alat->decrement('stok');
+                $alat->update(['status' => 'dipinjam']);
+                if (!isset($validated['petugas_id'])) {
+                    $validated['petugas_id'] = auth()->id();
+                }
+            } elseif ($fromBorrowed) {
+                $alat->increment('stok');
+                // Jika kembali atau pindah ke pending/ditolak, status alat jadi tersedia
+                $alat->update(['status' => 'tersedia']);
+            }
+
             $peminjaman->update($validated);
 
             return response()->json([
@@ -233,6 +290,7 @@ class PeminjamanController extends Controller
             }
 
             $alat->decrement('stok');
+            $alat->update(['status' => 'dipinjam']);
 
             $peminjaman->update([
                 'status' => 'Dipinjam',
@@ -310,12 +368,6 @@ class PeminjamanController extends Controller
     {
         return DB::transaction(function () use ($id) {
             $peminjaman = Peminjaman::findOrFail($id);
-            
-            if ($peminjaman->status !== 'Dikembalikan') {
-                $alat = Alat::lockForUpdate()->find($peminjaman->alat_id);
-                $alat->increment('stok');
-            }
-
             $peminjaman->delete();
 
             return response()->json([

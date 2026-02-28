@@ -21,22 +21,25 @@ class RolePermissionSeeder extends Seeder
         if ($petugas) {
             $petugas->syncPermissions([
                 'alat.view',
-                'alat.create',
-                'alat.update',
                 'kategori.view',
                 'peminjaman.view',
-                'peminjaman.create',
                 'peminjaman.approve',
                 'pengembalian.view',
                 'pengembalian.create',
                 'pengembalian.scan',
+                'laporan.peminjaman',
+                'laporan.pengembalian',
             ]);
         }
 
         if ($peminjam) {
             $peminjam->syncPermissions([
+                'alat.view',
                 'peminjaman.view',
                 'peminjaman.create',
+                'pengembalian.view',
+                'pengembalian.create',
+                'pengembalian.scan',
             ]);
         }
     }

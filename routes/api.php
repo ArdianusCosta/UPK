@@ -39,6 +39,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/', [PeminjamanController::class, 'index']);
         Route::post('/', [PeminjamanController::class, 'store']);
         Route::get('/{id}', [PeminjamanController::class, 'show']);
+        Route::patch('/{id}', [PeminjamanController::class, 'update']);
         Route::delete('/{id}', [PeminjamanController::class, 'destroy']);
         
         // Approval
@@ -47,16 +48,14 @@ Route::middleware('auth:sanctum')->group(function () {
     });
 
     Route::prefix('pengembalians')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Api\PengembalianController::class, 'index'])->middleware('permission:pengembalian.view');
+        Route::post('/', [\App\Http\Controllers\Api\PengembalianController::class, 'store'])->middleware('permission:pengembalian.create');
         Route::get('/trashed', [\App\Http\Controllers\Api\PengembalianController::class, 'trashed'])->middleware('permission:pengembalian.view');
+        Route::get('/{id}', [\App\Http\Controllers\Api\PengembalianController::class, 'show'])->middleware('permission:pengembalian.view');
+        Route::patch('/{id}', [\App\Http\Controllers\Api\PengembalianController::class, 'update'])->middleware('permission:pengembalian.update');
+        Route::delete('/{id}', [\App\Http\Controllers\Api\PengembalianController::class, 'destroy'])->middleware('permission:pengembalian.delete');
         Route::post('/{id}/restore', [\App\Http\Controllers\Api\PengembalianController::class, 'restore'])->middleware('permission:pengembalian.view');
     });
-    Route::apiResource('pengembalians', \App\Http\Controllers\Api\PengembalianController::class)->middleware([
-        'index' => 'permission:pengembalian.view',
-        'show' => 'permission:pengembalian.view',
-        'store' => 'permission:pengembalian.create',
-        'update' => 'permission:pengembalian.update',
-        'destroy' => 'permission:pengembalian.delete',
-    ]);
 
     Route::middleware('auth:sanctum')->group(function () {
         Route::get('/users-chat', [ChatController::class, 'users']);
