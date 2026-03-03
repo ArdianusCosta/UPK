@@ -8,6 +8,8 @@ use App\Http\Controllers\MasterData\KategoriAlatController;
 use App\Http\Controllers\PeminjamanController;
 use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\UserController;
+use App\Http\Controllers\Api\RoleController;
+use App\Http\Controllers\Api\PermissionController;
 use App\Http\Controllers\Api\PengembalianController;
 use App\Http\Controllers\Api\ActivityLogController;
 use App\Http\Controllers\LaporanController;
@@ -60,18 +62,30 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/{id}/restore', [PengembalianController::class, 'restore'])->middleware('permission:pengembalian.view');
     });
 
-    Route::middleware('auth:sanctum')->group(function () {
-        Route::get('/users-chat', [ChatController::class, 'users']);
-        Route::get('/messages/{userId}', [ChatController::class, 'getMessages']);
-        Route::post('/messages', [ChatController::class, 'sendMessage']);
-        Route::delete('/messages/{id}', [ChatController::class, 'destroyMessage']);
-        Route::post('/messages/{userId}/read', [ChatController::class, 'markAsRead']);
-    });
+    // Chat
+    Route::get('/users-chat', [ChatController::class, 'users']);
+    Route::get('/messages/{userId}', [ChatController::class, 'getMessages']);
+    Route::post('/messages', [ChatController::class, 'sendMessage']);
+    Route::delete('/messages/{id}', [ChatController::class, 'destroyMessage']);
+    Route::post('/messages/{userId}/read', [ChatController::class, 'markAsRead']);
 
-    Route::middleware('auth:sanctum')->group(function () {
-        Route::get('/users-profile', [UserController::class, 'index']);
-        Route::patch('/users-profile/{id}', [UserController::class, 'update']);
-    });
+    // User Profile
+    Route::get('/users-profile', [UserController::class, 'index']);
+    Route::post('/users-profile', [UserController::class, 'store']);
+    Route::patch('/users-profile/{id}', [UserController::class, 'update']);
+    Route::delete('/users-profile/{id}', [UserController::class, 'destroy']);
+
+    // Roles
+    Route::get('/roles', [RoleController::class, 'index']);
+    Route::post('/roles', [RoleController::class, 'store']);
+    Route::patch('/roles/{id}', [RoleController::class, 'update']);
+    Route::delete('/roles/{id}', [RoleController::class, 'destroy']);
+
+    // Permissions
+    Route::get('/permissions', [PermissionController::class, 'index']);
+    Route::post('/permissions', [PermissionController::class, 'store']);
+    Route::patch('/permissions/{id}', [PermissionController::class, 'update']);
+    Route::delete('/permissions/{id}', [PermissionController::class, 'destroy']);
 
     Route::prefix('laporan')->group(function () {
         Route::get('/', [LaporanController::class, 'index']);

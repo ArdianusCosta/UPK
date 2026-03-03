@@ -12,9 +12,51 @@ class UserController extends Controller
 {
     public function index()
     {
+        $users = User::with('roles')->get()->map(function($user) {
+            return [
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'status' => $user->status,
+                'role' => $user->getRoleNames()->first(),
+                'roles' => $user->roles,
+                'foto' => $user->foto,
+            ];
+        });
+
         return response()->json([
             'status' => 'success',
-            'data' => User::all()
+            'data' => $users
+        ]);
+    }
+
+    public function store(Request $request)
+    {
+        $validate = $request->validate([
+            'name' => 'required',
+            'email' => 'required|email|unique:users,email',
+            'password' => 'required|min:8',
+            'no_hp' => 'nullable',
+            'status' => 'nullable',
+            'foto' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
+            'role' => 'required'
+        ]);
+
+        if ($request->hasFile('foto')) {
+            $validate['foto'] = $request->file('foto')->store('users', 'public');
+        }
+
+        $validate['password'] = bcrypt($validate['password']);
+        
+        $role = $validate['role'];
+        unset($validate['role']);
+
+        $user = User::create($validate);
+        $user->assignRole($role);
+
+        return response()->json([
+            'status' => 'success',
+            'data' => $user
         ]);
     }
 
@@ -27,10 +69,9 @@ class UserController extends Controller
             'email' => 'required|email|unique:users,email,' . $user->id,
             'password' => 'nullable|min:8',
             'no_hp' => 'nullable',
-            'bio_singkat_ajasih' => 'nullable',
-            'jenis_kelamin' => 'nullable',
             'status' => 'nullable',
-            'foto' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'foto' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
+            'role' => 'nullable'
         ]);
 
         if ($request->hasFile('foto')) {
@@ -46,11 +87,32 @@ class UserController extends Controller
             $validate['password'] = bcrypt($validate['password']);
         }
 
+        if (isset($validate['role'])) {
+            $user->syncRoles([$validate['role']]);
+            unset($validate['role']);
+        }
+
         $user->update($validate);
 
         return response()->json([
             'status' => 'success',
             'data' => $user
+        ]);
+    }
+
+    public function destroy($id)
+    {
+        $user = User::findOrFail($id);
+        
+        if ($user->foto) {
+            Storage::disk('public')->delete($user->foto);
+        }
+
+        $user->delete();
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'User deleted successfully'
         ]);
     }
 }

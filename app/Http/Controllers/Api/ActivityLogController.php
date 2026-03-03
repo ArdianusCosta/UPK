@@ -21,11 +21,9 @@ class ActivityLogController extends Controller
     )]
     public function index(Request $request)
     {
-        $limit = $request->input('limit', 10);
-        
         $activities = Activity::with(['causer', 'subject'])
             ->latest()
-            ->paginate($limit);
+            ->get();
 
         return response()->json([
             'status' => 'success',
