@@ -54,6 +54,12 @@ class LoginController extends Controller
 
         $user = Auth::user();
 
+        activity()
+            ->causedBy($user)
+            ->withProperties(['ip' => $request->ip()])
+            ->event('login')
+            ->log('User login ke sistem');
+
         $token = $user->createToken('auth_token')->plainTextToken;
 
         return response()->json([
@@ -85,7 +91,15 @@ class LoginController extends Controller
     )]
     public function logout(Request $request)
     {
-        $request->user()->currentAccessToken()->delete();
+        $user = $request->user();
+        
+        activity()
+            ->causedBy($user)
+            ->withProperties(['ip' => $request->ip()])
+            ->event('logout')
+            ->log('User logout dari sistem');
+
+        $user->currentAccessToken()->delete();
 
         return response()->json([
             'message' => 'Logout berhasil'

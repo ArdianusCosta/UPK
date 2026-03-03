@@ -9,6 +9,7 @@ use App\Http\Controllers\PeminjamanController;
 use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\PengembalianController;
+use App\Http\Controllers\Api\ActivityLogController;
 use App\Http\Controllers\LaporanController;
 use Illuminate\Support\Facades\Route;
 
@@ -77,4 +78,6 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/export-excel', [LaporanController::class, 'exportExcel']);
         Route::get('/export-pdf', [LaporanController::class, 'exportPdf']);
     });
+
+    Route::get('/activity-logs', [ActivityLogController::class, 'index'])->middleware('permission:log.view');
 });

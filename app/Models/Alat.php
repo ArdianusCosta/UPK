@@ -3,10 +3,15 @@
 namespace App\Models;
 
 use App\Models\MasterData\MDKategoriAlat;
+use App\Traits\LogsActivityWithIp;
 use Illuminate\Database\Eloquent\Model;
+use Spatie\Activitylog\Traits\LogsActivity;
+use Spatie\Activitylog\LogOptions;
 
 class Alat extends Model
 {
+    use LogsActivity, LogsActivityWithIp;
+
     protected $table = 'alats';
 
     protected $fillable = [

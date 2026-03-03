@@ -271,6 +271,25 @@
                 ]
             }
         },
+        "/api/activity-logs": {
+            "get": {
+                "tags": [
+                    "Activity Log"
+                ],
+                "summary": "Ambil daftar log aktivitas",
+                "operationId": "38649a59c116e933561db69c56b6dbe2",
+                "responses": {
+                    "200": {
+                        "description": "Berhasil mengambil daftar log aktivitas"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/api/dashboard/stats": {
             "get": {
                 "tags": [
@@ -863,9 +882,14 @@
                                         "format": "date",
                                         "example": "2026-02-23"
                                     },
+                                    "tanggal_kembali": {
+                                        "type": "string",
+                                        "format": "date",
+                                        "example": "2026-02-28"
+                                    },
                                     "status": {
                                         "type": "string",
-                                        "example": "Dipinjam"
+                                        "example": "Pending"
                                     }
                                 },
                                 "type": "object"
@@ -1008,9 +1032,14 @@
                                         "type": "string",
                                         "format": "date"
                                     },
+                                    "tanggal_kembali": {
+                                        "type": "string",
+                                        "format": "date"
+                                    },
                                     "status": {
                                         "type": "string",
                                         "enum": [
+                                            "Pending",
                                             "Dipinjam",
                                             "Terlambat",
                                             "Dikembalikan"
@@ -1031,6 +1060,66 @@
                                 "example": {
                                     "status": "success",
                                     "message": "Data peminjaman berhasil diperbarui"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/peminjamans/{id}/approve": {
+            "post": {
+                "tags": [
+                    "Peminjaman"
+                ],
+                "summary": "Setujui pengajuan peminjaman",
+                "operationId": "424f23120d8f184d423abc0d3cda2126",
+                "responses": {
+                    "200": {
+                        "description": "Peminjaman disetujui",
+                        "content": {
+                            "application/json": {
+                                "schema": {},
+                                "example": {
+                                    "status": "success",
+                                    "message": "Peminjaman disetujui",
+                                    "data": {
+                                        "id": 1,
+                                        "status": "Dipinjam"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/peminjamans/{id}/reject": {
+            "post": {
+                "tags": [
+                    "Peminjaman"
+                ],
+                "summary": "Tolak pengajuan peminjaman",
+                "operationId": "65bad68a815df674a8fc26486f6dde2c",
+                "responses": {
+                    "200": {
+                        "description": "Peminjaman ditolak",
+                        "content": {
+                            "application/json": {
+                                "schema": {},
+                                "example": {
+                                    "status": "success",
+                                    "message": "Peminjaman ditolak"
                                 }
                             }
                         }
@@ -1069,6 +1158,10 @@
         {
             "name": "Peminjaman",
             "description": "API untuk mengelola transaksi peminjaman dan pengembalian alat"
+        },
+        {
+            "name": "Activity Log",
+            "description": "Activity Log"
         },
         {
             "name": "Dashboard",
