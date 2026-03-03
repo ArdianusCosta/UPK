@@ -8,6 +8,8 @@ use App\Http\Controllers\MasterData\KategoriAlatController;
 use App\Http\Controllers\PeminjamanController;
 use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\UserController;
+use App\Http\Controllers\Api\PengembalianController;
+use App\Http\Controllers\LaporanController;
 use Illuminate\Support\Facades\Route;
 
 Route::post('/login', [LoginController::class, 'login']);
@@ -48,13 +50,13 @@ Route::middleware('auth:sanctum')->group(function () {
     });
 
     Route::prefix('pengembalians')->group(function () {
-        Route::get('/', [\App\Http\Controllers\Api\PengembalianController::class, 'index'])->middleware('permission:pengembalian.view');
-        Route::post('/', [\App\Http\Controllers\Api\PengembalianController::class, 'store'])->middleware('permission:pengembalian.create');
-        Route::get('/trashed', [\App\Http\Controllers\Api\PengembalianController::class, 'trashed'])->middleware('permission:pengembalian.view');
-        Route::get('/{id}', [\App\Http\Controllers\Api\PengembalianController::class, 'show'])->middleware('permission:pengembalian.view');
-        Route::patch('/{id}', [\App\Http\Controllers\Api\PengembalianController::class, 'update'])->middleware('permission:pengembalian.update');
-        Route::delete('/{id}', [\App\Http\Controllers\Api\PengembalianController::class, 'destroy'])->middleware('permission:pengembalian.delete');
-        Route::post('/{id}/restore', [\App\Http\Controllers\Api\PengembalianController::class, 'restore'])->middleware('permission:pengembalian.view');
+        Route::get('/', [PengembalianController::class, 'index'])->middleware('permission:pengembalian.view');
+        Route::post('/', [PengembalianController::class, 'store'])->middleware('permission:pengembalian.create');
+        Route::get('/trashed', [PengembalianController::class, 'trashed'])->middleware('permission:pengembalian.view');
+        Route::get('/{id}', [PengembalianController::class, 'show'])->middleware('permission:pengembalian.view');
+        Route::patch('/{id}', [PengembalianController::class, 'update'])->middleware('permission:pengembalian.update');
+        Route::delete('/{id}', [PengembalianController::class, 'destroy'])->middleware('permission:pengembalian.delete');
+        Route::post('/{id}/restore', [PengembalianController::class, 'restore'])->middleware('permission:pengembalian.view');
     });
 
     Route::middleware('auth:sanctum')->group(function () {
@@ -68,5 +70,11 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::middleware('auth:sanctum')->group(function () {
         Route::get('/users-profile', [UserController::class, 'index']);
         Route::patch('/users-profile/{id}', [UserController::class, 'update']);
+    });
+
+    Route::prefix('laporan')->group(function () {
+        Route::get('/', [LaporanController::class, 'index']);
+        Route::get('/export-excel', [LaporanController::class, 'exportExcel']);
+        Route::get('/export-pdf', [LaporanController::class, 'exportPdf']);
     });
 });
