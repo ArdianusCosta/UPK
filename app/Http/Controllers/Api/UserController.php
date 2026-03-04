@@ -8,8 +8,24 @@ use Illuminate\Http\Request;
 use App\Models\User;
 use Illuminate\Support\Facades\Storage;
 
+use OpenApi\Attributes as OA;
+
+#[OA\Tag(
+    name: "User Management",
+    description: "API untuk mengelola data user"
+)]
 class UserController extends Controller
 {
+    #[OA\Get(
+        path: "/api/users",
+        summary: "Ambil semua data user",
+        security: [["bearerAuth" => []]],
+        tags: ["User Management"]
+    )]
+    #[OA\Response(
+        response: 200,
+        description: "Berhasil mengambil data user"
+    )]
     public function index()
     {
         $users = User::with('roles')->get()->map(function($user) {
@@ -30,6 +46,34 @@ class UserController extends Controller
         ]);
     }
 
+    #[OA\Post(
+        path: "/api/users",
+        summary: "Tambah user baru",
+        security: [["bearerAuth" => []]],
+        tags: ["User Management"],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\MediaType(
+                mediaType: "multipart/form-data",
+                schema: new OA\Schema(
+                    required: ["name", "email", "password", "role"],
+                    properties: [
+                        new OA\Property(property: "name", type: "string"),
+                        new OA\Property(property: "email", type: "string", format: "email"),
+                        new OA\Property(property: "password", type: "string", format: "password"),
+                        new OA\Property(property: "no_hp", type: "string"),
+                        new OA\Property(property: "status", type: "string"),
+                        new OA\Property(property: "foto", type: "string", format: "binary"),
+                        new OA\Property(property: "role", type: "string")
+                    ]
+                )
+            )
+        )
+    )]
+    #[OA\Response(
+        response: 201,
+        description: "User berhasil dibuat"
+    )]
     public function store(Request $request)
     {
         $validate = $request->validate([
@@ -60,6 +104,37 @@ class UserController extends Controller
         ]);
     }
 
+    #[OA\Post(
+        path: "/api/users/{id}",
+        summary: "Update data user (Gunakan POST dengan _method=PUT untuk upload file)",
+        security: [["bearerAuth" => []]],
+        tags: ["User Management"],
+        parameters: [
+            new OA\Parameter(name: "id", in: "path", required: true, schema: new OA\Schema(type: "integer"))
+        ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\MediaType(
+                mediaType: "multipart/form-data",
+                schema: new OA\Schema(
+                    properties: [
+                        new OA\Property(property: "_method", type: "string", example: "PUT"),
+                        new OA\Property(property: "name", type: "string"),
+                        new OA\Property(property: "email", type: "string", format: "email"),
+                        new OA\Property(property: "password", type: "string", format: "password"),
+                        new OA\Property(property: "no_hp", type: "string"),
+                        new OA\Property(property: "status", type: "string"),
+                        new OA\Property(property: "foto", type: "string", format: "binary"),
+                        new OA\Property(property: "role", type: "string")
+                    ]
+                )
+            )
+        )
+    )]
+    #[OA\Response(
+        response: 200,
+        description: "User berhasil diupdate"
+    )]
     public function update(Request $request, $id)
     {
         $user = User::findOrFail($id);
@@ -100,6 +175,19 @@ class UserController extends Controller
         ]);
     }
 
+    #[OA\Delete(
+        path: "/api/users/{id}",
+        summary: "Hapus user",
+        security: [["bearerAuth" => []]],
+        tags: ["User Management"],
+        parameters: [
+            new OA\Parameter(name: "id", in: "path", required: true, schema: new OA\Schema(type: "integer"))
+        ]
+    )]
+    #[OA\Response(
+        response: 200,
+        description: "User berhasil dihapus"
+    )]
     public function destroy($id)
     {
         $user = User::findOrFail($id);

@@ -20,13 +20,17 @@ class RolePermissionSeeder extends Seeder
 
         if ($petugas) {
             $petugas->syncPermissions([
+                'dashboard.view',
                 'alat.view',
                 'kategori.view',
                 'peminjaman.view',
+                'peminjaman.view_all',
                 'peminjaman.approve',
                 'pengembalian.view',
+                'pengembalian.view_all',
                 'pengembalian.create',
                 'pengembalian.scan',
+                'laporan.view',
                 'laporan.peminjaman',
                 'laporan.pengembalian',
             ]);

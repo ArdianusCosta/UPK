@@ -9,8 +9,30 @@ use Maatwebsite\Excel\Facades\Excel;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\DB;
 
+use OpenApi\Attributes as OA;
+
+#[OA\Tag(
+    name: "Laporan",
+    description: "API untuk mengelola laporan peminjaman"
+)]
 class LaporanController extends Controller
 {
+    #[OA\Get(
+        path: "/api/laporan",
+        summary: "Ambil data laporan peminjaman",
+        security: [["bearerAuth" => []]],
+        tags: ["Laporan"],
+        parameters: [
+            new OA\Parameter(name: "start", in: "query", schema: new OA\Schema(type: "string", format: "date")),
+            new OA\Parameter(name: "end", in: "query", schema: new OA\Schema(type: "string", format: "date")),
+            new OA\Parameter(name: "status", in: "query", schema: new OA\Schema(type: "string")),
+            new OA\Parameter(name: "user_id", in: "query", schema: new OA\Schema(type: "string"))
+        ]
+    )]
+    #[OA\Response(
+        response: 200,
+        description: "Berhasil mengambil data laporan"
+    )]
     public function index(Request $request)
     {
         $query = Peminjaman::with(['peminjam', 'alat.kategoriAlat']);
@@ -72,6 +94,22 @@ class LaporanController extends Controller
         ]);
     }
 
+    #[OA\Get(
+        path: "/api/laporan/export/excel",
+        summary: "Export laporan ke Excel",
+        security: [["bearerAuth" => []]],
+        tags: ["Laporan"],
+        parameters: [
+            new OA\Parameter(name: "start", in: "query", schema: new OA\Schema(type: "string", format: "date")),
+            new OA\Parameter(name: "end", in: "query", schema: new OA\Schema(type: "string", format: "date")),
+            new OA\Parameter(name: "status", in: "query", schema: new OA\Schema(type: "string")),
+            new OA\Parameter(name: "user_id", in: "query", schema: new OA\Schema(type: "string"))
+        ]
+    )]
+    #[OA\Response(
+        response: 200,
+        description: "Berhasil mendownload file Excel"
+    )]
     public function exportExcel(Request $request)
     {
         $query = Peminjaman::with(['peminjam', 'alat.kategoriAlat']);
@@ -93,6 +131,22 @@ class LaporanController extends Controller
         return Excel::download(new LaporanExport($data), 'laporan-peminjaman-' . now()->format('Y-m-d') . '.xlsx');
     }
 
+    #[OA\Get(
+        path: "/api/laporan/export/pdf",
+        summary: "Export laporan ke PDF",
+        security: [["bearerAuth" => []]],
+        tags: ["Laporan"],
+        parameters: [
+            new OA\Parameter(name: "start", in: "query", schema: new OA\Schema(type: "string", format: "date")),
+            new OA\Parameter(name: "end", in: "query", schema: new OA\Schema(type: "string", format: "date")),
+            new OA\Parameter(name: "status", in: "query", schema: new OA\Schema(type: "string")),
+            new OA\Parameter(name: "user_id", in: "query", schema: new OA\Schema(type: "string"))
+        ]
+    )]
+    #[OA\Response(
+        response: 200,
+        description: "Berhasil mendownload file PDF"
+    )]
     public function exportPdf(Request $request)
     {
         $query = Peminjaman::with(['peminjam', 'alat.kategoriAlat']);

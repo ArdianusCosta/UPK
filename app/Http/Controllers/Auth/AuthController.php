@@ -5,8 +5,20 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 
+use OpenApi\Attributes as OA;
+
 class AuthController extends Controller
 {
+    #[OA\Get(
+        path: "/api/user",
+        summary: "Ambil data user yang sedang login",
+        security: [["bearerAuth" => []]],
+        tags: ["Auth"]
+    )]
+    #[OA\Response(
+        response: 200,
+        description: "Berhasil mengambil data user"
+    )]
     public function getUser(Request $request)
     {
         $user = $request->user();

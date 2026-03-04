@@ -41,11 +41,11 @@ Route::middleware('auth:sanctum')->group(function () {
     });
 
     Route::prefix('peminjamans')->group(function () {
-        Route::get('/', [PeminjamanController::class, 'index']);
-        Route::post('/', [PeminjamanController::class, 'store']);
-        Route::get('/{id}', [PeminjamanController::class, 'show']);
-        Route::patch('/{id}', [PeminjamanController::class, 'update']);
-        Route::delete('/{id}', [PeminjamanController::class, 'destroy']);
+        Route::get('/', [PeminjamanController::class, 'index'])->middleware('permission:peminjaman.view');
+        Route::post('/', [PeminjamanController::class, 'store'])->middleware('permission:peminjaman.create');
+        Route::get('/{id}', [PeminjamanController::class, 'show'])->middleware('permission:peminjaman.view');
+        Route::patch('/{id}', [PeminjamanController::class, 'update'])->middleware('permission:peminjaman.update');
+        Route::delete('/{id}', [PeminjamanController::class, 'destroy'])->middleware('permission:peminjaman.delete');
         
         // Approval
         Route::post('/{id}/approve', [PeminjamanController::class, 'approve'])->middleware('permission:peminjaman.approve');
@@ -66,28 +66,29 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/users-chat', [ChatController::class, 'users']);
     Route::get('/messages/{userId}', [ChatController::class, 'getMessages']);
     Route::post('/messages', [ChatController::class, 'sendMessage']);
+    Route::patch('/messages/{id}', [ChatController::class, 'update']);
     Route::delete('/messages/{id}', [ChatController::class, 'destroyMessage']);
     Route::post('/messages/{userId}/read', [ChatController::class, 'markAsRead']);
 
     // User Profile
-    Route::get('/users-profile', [UserController::class, 'index']);
-    Route::post('/users-profile', [UserController::class, 'store']);
-    Route::patch('/users-profile/{id}', [UserController::class, 'update']);
-    Route::delete('/users-profile/{id}', [UserController::class, 'destroy']);
+    Route::get('/users-profile', [UserController::class, 'index'])->middleware('permission:users.view');
+    Route::post('/users-profile', [UserController::class, 'store'])->middleware('permission:users.create');
+    Route::patch('/users-profile/{id}', [UserController::class, 'update'])->middleware('permission:users.update');
+    Route::delete('/users-profile/{id}', [UserController::class, 'destroy'])->middleware('permission:users.delete');
 
     // Roles
-    Route::get('/roles', [RoleController::class, 'index']);
-    Route::post('/roles', [RoleController::class, 'store']);
-    Route::patch('/roles/{id}', [RoleController::class, 'update']);
-    Route::delete('/roles/{id}', [RoleController::class, 'destroy']);
+    Route::get('/roles', [RoleController::class, 'index'])->middleware('permission:role.view');
+    Route::post('/roles', [RoleController::class, 'store'])->middleware('permission:role.create');
+    Route::patch('/roles/{id}', [RoleController::class, 'update'])->middleware('permission:role.update');
+    Route::delete('/roles/{id}', [RoleController::class, 'destroy'])->middleware('permission:role.delete');
 
     // Permissions
-    Route::get('/permissions', [PermissionController::class, 'index']);
-    Route::post('/permissions', [PermissionController::class, 'store']);
-    Route::patch('/permissions/{id}', [PermissionController::class, 'update']);
-    Route::delete('/permissions/{id}', [PermissionController::class, 'destroy']);
+    Route::get('/permissions', [PermissionController::class, 'index'])->middleware('permission:permission.view');
+    Route::post('/permissions', [PermissionController::class, 'store'])->middleware('permission:permission.create');
+    Route::patch('/permissions/{id}', [PermissionController::class, 'update'])->middleware('permission:permission.update');
+    Route::delete('/permissions/{id}', [PermissionController::class, 'destroy'])->middleware('permission:permission.delete');
 
-    Route::prefix('laporan')->group(function () {
+    Route::prefix('laporan')->middleware('permission:laporan.view')->group(function () {
         Route::get('/', [LaporanController::class, 'index']);
         Route::get('/export-excel', [LaporanController::class, 'exportExcel']);
         Route::get('/export-pdf', [LaporanController::class, 'exportPdf']);

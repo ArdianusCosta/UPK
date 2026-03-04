@@ -45,8 +45,8 @@ class PeminjamanController extends Controller
     {
         $query = Peminjaman::with(['peminjam:id,name', 'alat:id,nama,foto'])->orderBy('created_at', 'desc');
 
-        // Role Peminjam hanya bisa melihat data sendiri
-        if (auth()->user()->hasRole('Peminjam')) {
+        // Role Peminjam hanya bisa melihat data sendiri, atau siapapun yang tidak punya permission view_all
+        if (!auth()->user()->can('peminjaman.view_all')) {
             $query->where('peminjam_id', auth()->id());
         }
 

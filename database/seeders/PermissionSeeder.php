@@ -51,7 +51,11 @@ class PermissionSeeder extends Seeder
             'permission.update',
             'permission.delete',
 
+            // DASHBOARD
+            'dashboard.view',
+
             // LAPORAN
+            'laporan.view',
             'laporan.peminjaman',
             'laporan.pengembalian',
 
@@ -59,8 +63,15 @@ class PermissionSeeder extends Seeder
             'log.view',
 
             // PENGATURAN
+            'pengaturan.view',
             'pengaturan.update',
         ];
+
+        // ADD GLOBAL PERMISSIONS FOR FILTERING
+        $permissions = array_merge($permissions, [
+            'peminjaman.view_all',
+            'pengembalian.view_all',
+        ]);
 
         foreach ($permissions as $permission) {
             Permission::firstOrCreate([

@@ -26,7 +26,7 @@ class DashboardController extends Controller
     public function getStats()
     {
         $user = auth()->user();
-        $isPeminjam = $user->hasRole('Peminjam');
+        $isPeminjam = !$user->can('dashboard.view_all');
 
         // 1. Summary Stats
         if ($isPeminjam) {

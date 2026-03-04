@@ -52,7 +52,7 @@ class PengembalianController extends Controller
         $query = Pengembalian::with(['peminjaman.peminjam', 'peminjaman.alat'])
             ->orderBy('created_at', 'desc');
 
-        if (auth()->user()->hasRole('Peminjam')) {
+        if (!auth()->user()->can('pengembalian.view_all')) {
             $query->whereHas('peminjaman', function ($q) {
                 $q->where('peminjam_id', auth()->id());
             });
@@ -290,7 +290,7 @@ class PengembalianController extends Controller
             ->with(['peminjaman.peminjam', 'peminjaman.alat'])
             ->orderBy('deleted_at', 'desc');
 
-        if (auth()->user()->hasRole('Peminjam')) {
+        if (!auth()->user()->can('pengembalian.view_all')) {
             $query->whereHas('peminjaman', function ($q) {
                 $q->where('peminjam_id', auth()->id());
             });
