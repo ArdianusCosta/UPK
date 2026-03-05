@@ -27,6 +27,7 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'google_id',
         'no_hp',
         'bio_singkat_ajasih',
         'jenis_kelamin',

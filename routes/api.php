@@ -13,15 +13,19 @@ use App\Http\Controllers\Api\PermissionController;
 use App\Http\Controllers\Api\PengembalianController;
 use App\Http\Controllers\Api\ActivityLogController;
 use App\Http\Controllers\LaporanController;
+use App\Http\Controllers\Auth\GoogleController;
 use Illuminate\Support\Facades\Route;
 
 Route::post('/login', [LoginController::class, 'login']);
+Route::get('/auth/google', [GoogleController::class, 'redirectToGoogle']);
+Route::get('/auth/google/callback', [GoogleController::class, 'handleGoogleCallback']);
 
 Route::middleware('auth:sanctum')->group(function () {
 
     Route::get('/dashboard/stats', [DashboardController::class, 'getStats']);
 
     Route::get('/user', [AuthController::class, 'getUser']);
+    Route::patch('/user/update', [AuthController::class, 'updateProfile']);
     Route::post('/logout', [LoginController::class, 'logout']);
 
     Route::prefix('master-data')->group(function () {
