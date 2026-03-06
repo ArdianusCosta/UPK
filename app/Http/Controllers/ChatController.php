@@ -29,12 +29,19 @@ class ChatController extends Controller
     public function users(Request $request)
     {
         return User::where('id', '!=', $request->user()->id)
-            ->select('id', 'name')
-            ->withCount(['messagesSent as unread_count' => function ($query) use ($request) {
-                $query->where('receiver_id', $request->user()->id)
-                      ->where('is_read', false);
-            }])
-            ->get();
+            ->get()
+            ->map(function ($user) use ($request) {
+                return [
+                    'id' => $user->id,
+                    'name' => $user->name,
+                    'foto' => $user->foto,
+                    'role' => $user->role,
+                    'unread_count' => Message::where('sender_id', $user->id)
+                        ->where('receiver_id', $request->user()->id)
+                        ->where('is_read', false)
+                        ->count()
+                ];
+            });
     }
 
     #[OA\Get(
@@ -66,7 +73,7 @@ class ChatController extends Controller
             $query->where('sender_id', $userId)
                   ->where('receiver_id', $request->user()->id);
         })
-        ->with('sender:id,name')
+        ->with('sender:id,name,foto')
         ->orderBy('created_at')
         ->get();
     }
@@ -128,7 +135,7 @@ class ChatController extends Controller
 
         broadcast(new MessageSent($message))->toOthers();
 
-        return $message->load('sender:id,name');
+        return $message->load('sender:id,name,foto');
     }
 
     public function update(Request $request, $id)
@@ -149,7 +156,7 @@ class ChatController extends Controller
 
         broadcast(new MessageUpdated($message))->toOthers();
 
-        return $message->load('sender:id,name');
+        return $message->load('sender:id,name,foto');
     }
 
     #[OA\Delete(

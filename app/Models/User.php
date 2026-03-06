@@ -35,6 +35,13 @@ class User extends Authenticatable
         'foto',
     ];
 
+    protected $appends = ['role'];
+
+    public function getRoleAttribute()
+    {
+        return $this->getRoleNames()->first();
+    }
+
     /**
      * The attributes that should be hidden for serialization.
      *
