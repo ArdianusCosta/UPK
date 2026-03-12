@@ -4,8 +4,11 @@ namespace App\Http\Controllers;
 
 use App\Models\Alat;
 use App\Models\Peminjaman;
+use App\Services\NotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Barryvdh\DomPDF\Facade\Pdf;
+use SimpleSoftwareIO\QrCode\Facades\QrCode;
 use OpenApi\Attributes as OA;
 
 #[OA\Tag(
@@ -14,6 +17,12 @@ use OpenApi\Attributes as OA;
 )]
 class PeminjamanController extends Controller
 {
+    protected $notificationService;
+
+    public function __construct(NotificationService $notificationService)
+    {
+        $this->notificationService = $notificationService;
+    }
     #[OA\Get(
         path: "/api/peminjamans",
         summary: "Ambil semua data peminjaman",
@@ -45,14 +54,12 @@ class PeminjamanController extends Controller
     {
         $query = Peminjaman::with(['peminjam:id,name', 'alat:id,nama,foto'])->orderBy('created_at', 'desc');
 
-        // Role Peminjam hanya bisa melihat data sendiri, atau siapapun yang tidak punya permission view_all
         if (!auth()->user()->can('peminjaman.view_all')) {
             $query->where('peminjam_id', auth()->id());
         }
 
         $peminjamans = $query->get();
 
-        // Update status terlambat secara dinamis jika diperlukan
         foreach ($peminjamans as $peminjaman) {
             if ($peminjaman->status === 'Dipinjam' && $peminjaman->tanggal_kembali && $peminjaman->tanggal_kembali < now()->toDateString()) {
                 $peminjaman->update(['status' => 'Terlambat']);
@@ -109,7 +116,6 @@ class PeminjamanController extends Controller
             $alat = Alat::lockForUpdate()->findOrFail($request->alat_id);
             $status = $request->status ?? 'Pending';
 
-            // Jika status langsung Dipinjam atau Terlambat, cek stok
             if (in_array($status, ['Dipinjam', 'Terlambat'])) {
                 if ($alat->stok <= 0) {
                     return response()->json([
@@ -131,6 +137,8 @@ class PeminjamanController extends Controller
             ]);
 
             $peminjaman->refresh();
+
+            $this->notificationService->notifyPeminjaman($peminjaman, 'created');
 
             $message = $status === 'Pending' 
                 ? 'Pengajuan peminjaman berhasil dikirim, menunggu persetujuan petugas.' 
@@ -215,10 +223,7 @@ class PeminjamanController extends Controller
             $oldStatus = $peminjaman->status;
             $newStatus = $validated['status'] ?? $oldStatus;
 
-            // Logika Stok:
-            // 1. Masuk ke status yang mengurangi stok
             $toBorrowed = !in_array($oldStatus, ['Dipinjam', 'Terlambat']) && in_array($newStatus, ['Dipinjam', 'Terlambat']);
-            // 2. Keluar dari status yang mengurangi stok (termasuk ke Dikembalikan, Pending, Ditolak)
             $fromBorrowed = in_array($oldStatus, ['Dipinjam', 'Terlambat']) && !in_array($newStatus, ['Dipinjam', 'Terlambat']);
 
             $alat = Alat::lockForUpdate()->findOrFail($peminjaman->alat_id);
@@ -237,7 +242,6 @@ class PeminjamanController extends Controller
                 }
             } elseif ($fromBorrowed) {
                 $alat->increment('stok');
-                // Jika kembali atau pindah ke pending/ditolak, status alat jadi tersedia
                 $alat->update(['status' => 'tersedia']);
             }
 
@@ -298,6 +302,8 @@ class PeminjamanController extends Controller
                 'petugas_id' => auth()->id()
             ]);
 
+            $this->notificationService->notifyPeminjaman($peminjaman, 'dipinjam');
+
             return response()->json([
                 'status' => 'success',
                 'message' => 'Peminjaman berhasil disetujui',
@@ -338,6 +344,8 @@ class PeminjamanController extends Controller
             'petugas_id' => auth()->id()
         ]);
 
+        $this->notificationService->notifyPeminjaman($peminjaman, 'rejected');
+
         return response()->json([
             'status' => 'success',
             'message' => 'Peminjaman telah ditolak',
@@ -375,5 +383,25 @@ class PeminjamanController extends Controller
                 'message' => 'Data peminjaman dihapus'
             ]);
         });
+    }
+
+    #[OA\Get(
+        path: "/api/peminjamans/{id}/download",
+        summary: "Download Resi Peminjaman",
+        security: [["bearerAuth" => []]],
+        tags: ["Peminjaman"]
+    )]
+    public function downloadReceipt($id)
+    {
+        $peminjaman = Peminjaman::with(['peminjam', 'alat.kategoriAlat'])->findOrFail($id);
+        
+        $qrcode = QrCode::size(200)->generate($peminjaman->kode);
+        
+        $pdf = Pdf::loadView('peminjaman.resi', [
+            'peminjaman' => $peminjaman,
+            'qrcode' => $qrcode
+        ]);
+
+        return $pdf->download("Resi-Peminjaman-{$peminjaman->kode}.pdf");
     }
 }

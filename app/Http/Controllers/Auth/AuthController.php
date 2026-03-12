@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Validator;
 
 use OpenApi\Attributes as OA;
 
@@ -44,12 +46,29 @@ class AuthController extends Controller
         $validate = $request->validate([
             'name' => 'required',
             'email' => 'required|email|unique:users,email,' . $user->id,
-            'password' => 'nullable|min:8',
+            'password' => 'nullable|min:8|confirmed',
+            'password_confirmation' => 'nullable|min:8',
+            'current_password' => 'required_with:password',
             'no_hp' => 'nullable',
             'bio_singkat_ajasih' => 'nullable',
             'jenis_kelamin' => 'nullable',
             'foto' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
         ]);
+
+        if ($request->filled('password')) {
+            if (!Hash::check($request->current_password, $user->password)) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Password saat ini tidak sesuai',
+                ], 422);
+            }
+            $validate['password'] = bcrypt($request->password);
+        } else {
+            unset($validate['password']);
+        }
+
+        unset($validate['password_confirmation']);
+        unset($validate['current_password']);
 
         if ($request->hasFile('foto')) {
             if ($user->foto && !str_starts_with($user->foto, 'http')) {

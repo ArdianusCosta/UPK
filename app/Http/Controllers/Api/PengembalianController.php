@@ -8,6 +8,7 @@ use App\Models\Peminjaman;
 use App\Models\Pengembalian;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use App\Services\NotificationService;
 
 use OpenApi\Attributes as OA;
 
@@ -17,6 +18,12 @@ use OpenApi\Attributes as OA;
 )]
 class PengembalianController extends Controller
 {
+    protected $notificationService;
+
+    public function __construct(NotificationService $notificationService)
+    {
+        $this->notificationService = $notificationService;
+    }
     #[OA\Get(
         path: "/api/pengembalians",
         summary: "Ambil semua data pengembalian",
@@ -122,7 +129,6 @@ class PengembalianController extends Controller
                 ], 404);
             }
 
-            // 1. Create Pengembalian record
             $data = [
                 'peminjaman_id' => $peminjaman->id,
                 'tanggal_dikembalikan' => now(),
@@ -139,16 +145,17 @@ class PengembalianController extends Controller
 
             $pengembalian = Pengembalian::create($data);
 
-            // 2. Update Peminjaman status
+            $metode = $request->input('metode', 'manual');
+            $action = 'created_' . $metode;
+            $this->notificationService->notifyPengembalian($pengembalian, $action);
+
             $peminjaman->update([
                 'status' => 'Dikembalikan',
             ]);
 
-            // 3. Update Alat status and increment stock
             $alat = Alat::lockForUpdate()->find($peminjaman->alat_id);
             $alat->increment('stok');
             
-            // If condition is damaged, we might want to change alat status to maintenance
             if ($request->kondisi_kembali === 'rusak') {
                 $alat->update(['status' => 'maintenance']);
             } else {
@@ -219,7 +226,6 @@ class PengembalianController extends Controller
         $updateData = $request->only(['kondisi_kembali', 'catatan', 'tanggal_dikembalikan']);
 
         if ($request->hasFile('foto')) {
-            // Delete old photo if exists
             if ($pengembalian->foto && file_exists(public_path('uploads/pengembalian/' . $pengembalian->foto))) {
                 unlink(public_path('uploads/pengembalian/' . $pengembalian->foto));
             }
@@ -255,8 +261,6 @@ class PengembalianController extends Controller
         return DB::transaction(function () use ($id) {
             $pengembalian = Pengembalian::findOrFail($id);
             
-            // Logika Stok: Jika pengembalian dihapus, stok berkurang lagi 
-            // karena alat dianggap belum benar-benar kembali (sesuai request user)
             $peminjaman = $pengembalian->peminjaman;
             if ($peminjaman) {
                 $alat = Alat::lockForUpdate()->find($peminjaman->alat_id);
@@ -320,7 +324,6 @@ class PengembalianController extends Controller
         return DB::transaction(function () use ($id) {
             $pengembalian = Pengembalian::onlyTrashed()->findOrFail($id);
             
-            // Logika Stok: Jika pengembalian di-restore, stok bertambah lagi
             $peminjaman = Peminjaman::find($pengembalian->peminjaman_id);
             if ($peminjaman) {
                 $alat = Alat::lockForUpdate()->find($peminjaman->alat_id);

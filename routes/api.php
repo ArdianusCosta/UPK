@@ -14,6 +14,7 @@ use App\Http\Controllers\Api\PengembalianController;
 use App\Http\Controllers\Api\ActivityLogController;
 use App\Http\Controllers\LaporanController;
 use App\Http\Controllers\Auth\GoogleController;
+use App\Http\Controllers\Api\NotificationController;
 use Illuminate\Support\Facades\Route;
 
 Route::post('/login', [LoginController::class, 'login']);
@@ -54,6 +55,9 @@ Route::middleware('auth:sanctum')->group(function () {
         // Approval
         Route::post('/{id}/approve', [PeminjamanController::class, 'approve'])->middleware('permission:peminjaman.approve');
         Route::post('/{id}/reject', [PeminjamanController::class, 'reject'])->middleware('permission:peminjaman.approve');
+        
+        // Download Receipt
+        Route::get('/{id}/download', [PeminjamanController::class, 'downloadReceipt'])->middleware('permission:peminjaman.view');
     });
 
     Route::prefix('pengembalians')->group(function () {
@@ -99,4 +103,16 @@ Route::middleware('auth:sanctum')->group(function () {
     });
 
     Route::get('/activity-logs', [ActivityLogController::class, 'index'])->middleware('permission:log.view');
+
+    // Notifications
+    Route::get('/notifications', [NotificationController::class, 'index']);
+    Route::get('/notifications/all', [NotificationController::class, 'all']);
+    Route::patch('/notifications/{id}/read', [NotificationController::class, 'markAsRead']);
+    Route::patch('/notifications/read-all', [NotificationController::class, 'markAllAsRead']);
+    Route::get('/notifications/unread-count', [NotificationController::class, 'unreadCount']);
+    
+    // Trigger notifications (for frontend to call)
+    Route::post('/notifications/peminjaman', [NotificationController::class, 'triggerPeminjamanNotification']);
+    Route::post('/notifications/pengembalian', [NotificationController::class, 'triggerPengembalianNotification']);
+    Route::post('/notifications/alat', [NotificationController::class, 'triggerAlatNotification']);
 });
