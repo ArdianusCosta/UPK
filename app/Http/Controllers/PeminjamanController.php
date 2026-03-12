@@ -277,6 +277,13 @@ class PeminjamanController extends Controller
         return DB::transaction(function () use ($id) {
             $peminjaman = Peminjaman::findOrFail($id);
 
+            if (!auth()->user()->hasRole('Petugas')) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Hanya Petugas yang dapat menyetujui peminjaman'
+                ], 403);
+            }
+
             if ($peminjaman->status !== 'Pending') {
                 return response()->json([
                     'status' => 'error',
@@ -331,6 +338,13 @@ class PeminjamanController extends Controller
     public function reject(Request $request, $id)
     {
         $peminjaman = Peminjaman::findOrFail($id);
+
+        if (!auth()->user()->hasRole('Petugas')) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Hanya Petugas yang dapat menolak peminjaman'
+            ], 403);
+        }
 
         if ($peminjaman->status !== 'Pending') {
             return response()->json([
