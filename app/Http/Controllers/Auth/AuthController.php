@@ -6,6 +6,11 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\DB;
+use App\Models\User;
+use App\Notifications\ResetPasswordNotification;
+use Carbon\Carbon;
+use Illuminate\Support\Facades\Log;
 
 use OpenApi\Attributes as OA;
 
@@ -89,6 +94,80 @@ class AuthController extends Controller
             'status' => 'success',
             'message' => 'Profil berhasil diperbarui',
             'data' => $user
+        ]);
+    }
+
+    public function forgotPassword(Request $request)
+    {
+        $request->validate([
+            'email' => 'required|email|exists:users,email'
+        ]);
+
+        $token = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+
+        DB::table('password_reset_tokens')->where('email', $request->email)->delete();
+
+        DB::table('password_reset_tokens')->insert([
+            'email' => $request->email,
+            'token' => Hash::make($token),
+            'created_at' => Carbon::now()
+        ]);
+
+        $user = User::where('email', $request->email)->first();
+        Log::info('Sending reset password email to: ' . $user->email);
+        $user->notify(new ResetPasswordNotification($token));
+        Log::info('Reset password email sent to: ' . $user->email);
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Kode reset password telah dikirim ke email Anda'
+        ]);
+    }
+
+    public function resetPassword(Request $request)
+    {
+        $request->validate([
+            'token' => 'required',
+            'email' => 'required|email|exists:users,email',
+            'password' => 'required|min:8|confirmed',
+        ]);
+
+        $resetData = DB::table('password_reset_tokens')
+            ->where('email', $request->email)
+            ->first();
+
+        if (!$resetData) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Kode reset tidak valid atau sudah kadaluarsa'
+            ], 422);
+        }
+
+        if (Carbon::parse($resetData->created_at)->addMinutes(60)->isPast()) {
+            DB::table('password_reset_tokens')->where('email', $request->email)->delete();
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Kode reset sudah kadaluarsa'
+            ], 422);
+        }
+
+        if (!Hash::check($request->token, $resetData->token)) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Kode reset tidak valid'
+            ], 422);
+        }
+
+        $user = User::where('email', $request->email)->first();
+        $user->update([
+            'password' => bcrypt($request->password)
+        ]);
+
+        DB::table('password_reset_tokens')->where('email', $request->email)->delete();
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Password berhasil direset. Silakan login dengan password baru Anda.'
         ]);
     }
 }
